@@ -19,7 +19,7 @@ const Listes = () => {
   useEffect(() => {
     const fetchData = async () => {
         try {
-            const response = await axios.get("https://nodeapp-2h1p.onrender.com/api/interventions");
+            const response = await axios.get("https://nodeapp-ectt.onrender.com/api/interventions");
             const equippedInterventions = response.data.map(intervention => ({
                 ...intervention,
                 equipmentName: intervention.equipment ? intervention.equipment.Nom : 'Unavailable' // Ensure this matches your DB schema

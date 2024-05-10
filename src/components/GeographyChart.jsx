@@ -9,8 +9,8 @@ const GeographyChart = () => {
   const projection = geoMercator();
 
   useEffect(() => {
-    axios.get('https://nodeapp-2h1p.onrender.com/pays')
-      .then(response => {
+    axios.get('https://nodeapp-ectt.onrender.com/pays')
+   .then(response => {
         if (response.data && Array.isArray(response.data)) {
           setData(response.data.filter(d => d.id != null && d.coordinates && d.coordinates.length === 2));
         }

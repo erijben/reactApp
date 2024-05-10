@@ -14,33 +14,16 @@ export const AuthContextProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
         console.log("Sending login request...");
-        const data  = await axios.post("https://nodeapp-2h1p.onrender.com/auth/login", { email, password });
+        const data  = await axios.post("https://nodeapp-ectt.onrender.com/auth/login", { email, password });
         console.log("API response data:", data);
 
-        if (data.accessToken) {
-            console.log("Login successful, received data:", data);
-            console.log("Rôle décodé :", data.user.role);
-            setCurrentUser({ ...data.user, token: data.accessToken });
-            localStorage.setItem("user", JSON.stringify({ ...data.user, token: data.accessToken }));
-// Vérifier si le token JWT est stocké dans le localStorage
-const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;
-
-if (token) {
-  console.log("Le token JWT est stocké dans le localStorage :", token);
-} else {
-  console.log("Aucun token JWT n'est stocké dans le localStorage.");
-}
-if (token) {
-  const decoded = jwtDecode(token);
-  console.log(decoded);
-  // Pour vérifier si le rôle est inclus
-  console.log("Le rôle inclus dans le token est :", decoded.role);
-}
-
-            console.log("Navigating to dashboard...");
-            navigate('/dashboard');
+        if (data.data.accessToken) {
+          const decoded = jwtDecode(data.data.accessToken);
+          setCurrentUser({ ...data.data.user, token: data.data.accessToken, role: decoded.role });
+          localStorage.setItem("user", JSON.stringify({ ...data.data.user, token: data.data.accessToken, role: decoded.role }));
+          navigate('/dashboard');
         } else {
-            console.log("No access token received");
+          console.log("No access token received");
         }
     } catch (error) {
         console.error("Login failed:", error);

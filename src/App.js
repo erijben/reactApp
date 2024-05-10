@@ -17,7 +17,6 @@ import Pie from "./scenes/pie";
 import Line from "./scenes/line";
 import Geography from "./scenes/geography";
 import Ping from "./scenes/ping";
-import LatencyAnalysis from "./scenes/latence";
 import ModifyEquipment from "./scenes/ModifyEquipment";
 import ModifyConfig from "./scenes/ModifyConfig";
 import ModifyUser from "./scenes/ModifyUser";

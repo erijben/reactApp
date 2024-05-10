@@ -34,7 +34,7 @@ console.log("Initial values for form:", initialValues);
       };
 
       console.log("Nouvelle configuration :", newconfig);
-      const response = await axios.post('https://nodeapp-2h1p.onrender.com/config/configs', newconfig);
+      const response = await axios.post('https://nodeapp-ectt.onrender.com/config/configs', newconfig);
       console.log("Réponse du serveur :", response.data);
       setSuccessMessage("Configuration ajoutée avec succès !");
       setTimeout(() => {

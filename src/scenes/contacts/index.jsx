@@ -32,7 +32,7 @@ const Contacts = () => {
 
       console.log("Nouvel équipement :", newEquipment);
 
-      const response = await axios.post('https://nodeapp-2h1p.onrender.com/equip/add', newEquipment);
+      const response = await axios.post('https://nodeapp-ectt.onrender.com/equip/add', newEquipment);
 
       console.log("Réponse du serveur :", response.data);
 
