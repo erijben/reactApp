@@ -49,14 +49,13 @@ const Dashboard = () => {
   const socket = io('http://localhost:3000'); // Assurez-vous que l'URL correspond à votre serveur
 
 
-
   // Écoute de l'événement 'newAlert' pour recevoir les nouvelles alertes
 socket.on('newAlert', (alert) => {
   // Mettez à jour votre interface utilisateur pour afficher la nouvelle alerte
   console.log('Nouvelle alerte reçue lors de l intervention:', alert);
   // Mettez à jour l'interface utilisateur avec l'alerte reçue
 });
- 
+
   // Vérifier si tous les équipements sont sélectionnés
   const isAllSelected = equipments.length > 0 && selectedEquipments.length === equipments.length;
 
@@ -68,7 +67,6 @@ socket.on('newAlert', (alert) => {
           endDate: endDate,
           equipmentIds: selectedEquipments
         });
-  
         setBarChartData(response.data);
       } else {
         setBarChartData(null);
@@ -78,8 +76,6 @@ socket.on('newAlert', (alert) => {
     }
   };
 
-
-  
   useEffect(() => {
     if (selectedEquipments.length > 0 && startDate && endDate) {
       fetchPingCount();
@@ -89,7 +85,6 @@ socket.on('newAlert', (alert) => {
       setBarChartData(null);
     }
   }, [selectedEquipments, startDate, endDate]);
-  
 
   useEffect(() => {
     // Fonction pour charger la liste des équipements lorsque le composant est monté
@@ -121,7 +116,7 @@ socket.on('newAlert', (alert) => {
       setSelectedEquipments([]);
     }
   };
-  
+
   const handleStartDateChange = (event) => {
     const formattedDate = event.target.value;
     setStartDate(formattedDate);
@@ -131,7 +126,7 @@ socket.on('newAlert', (alert) => {
     const formattedDate = event.target.value;
     setEndDate(formattedDate);
   };
-  
+
   const fetchEquipments = async () => {
     try {
       
@@ -145,7 +140,7 @@ socket.on('newAlert', (alert) => {
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -159,51 +154,66 @@ socket.on('newAlert', (alert) => {
     fetchData();
   }, []);
 
-
   useEffect(() => {
-    // Connexion à socket.io
-    const socket = io('http://localhost:3001'); // Assurez-vous que l'adresse correspond à votre serveur socket.io
-
-    // Gestion de la nouvelle alerte
+    const socket = io('http://localhost:3001');
+  
     socket.on('newAlert', (newAlert) => {
       console.log('Nouvelle alerte reçue:', newAlert);
-      let alertMessage = `Alerte: L'équipement ${newAlert.equipmentName || 'non spécifié'} est ${newAlert.status} après l'intervention.`;
-      let notificationColor; // Définir la couleur de la notification
-
-      switch (newAlert.status) {
-        case 'dysfonctionnel':
-          notificationColor = 'error';
-          break;
-        case 'Problème de réseau':
-          notificationColor = 'warning';
-          break;
-        case 'En bon état':
-          notificationColor = 'success';
-          break;
-        default:
-          notificationColor = 'info';
-          break;
+      let alertMessage = '';
+      let notificationColor;
+  
+      // Distinguez entre les types d'alerte
+      if (newAlert.alertType === 'Automatique') {
+        // Personnalisez le message pour une alerte automatique
+        alertMessage = `Surveillance Automatique: ${newAlert.equipmentName || 'Équipement non spécifié'} - ${newAlert.message}`;
+        switch (newAlert.status) {
+          case 'Dysfonctionnement':
+            notificationColor = 'error';
+            break;
+          case 'Problème de réseau potentiel':
+            notificationColor = 'warning';
+            break;
+          case 'En bon état':
+            notificationColor = 'success';
+            break;
+          default:
+            notificationColor = 'info';
+            break;
+        }
+      } else if (newAlert.alertType === 'Intervention') {
+        // Personnalisez le message pour une alerte de post-intervention
+        alertMessage = `Post-Intervention: ${newAlert.equipmentName || 'Équipement non spécifié'} - ${newAlert.message}`;
+        switch (newAlert.status) {
+          case 'dysfonctionnel':
+            notificationColor = 'error';
+            break;
+          case 'Problème de réseau':
+            notificationColor = 'warning';
+            break;
+          case 'En bon état':
+            notificationColor = 'success';
+            break;
+          default:
+            notificationColor = 'info';
+            break;
+        }
       }
   
-      // Ajoutez le message personnalisé à l'état des alertes
+      // Mise à jour de l'état des alertes avec le nouveau message et la couleur
       setAlerts(currentAlerts => [
         ...currentAlerts,
-        { ...newAlert, message: alertMessage }
+        { ...newAlert, message: alertMessage, notificationColor }
       ]);
-
-      // Affichez une notification avec la couleur appropriée
+  
+      // Afficher la notification avec snackbar
       enqueueSnackbar(alertMessage, { variant: notificationColor });
     });
-
-    // Nettoyer l'écouteur d'événement lorsque le composant est démonté
     return () => {
       socket.off('newAlert');
       socket.close();
     };
-  }, []);
+  }, [enqueueSnackbar]);
 
-
-  
   useEffect(() => {
     if (selectedEquipments.length > 0 && startDate && endDate) {
       fetchPingCount();
@@ -230,6 +240,7 @@ socket.on('newAlert', (alert) => {
     console.error('Error fetching ping count:', error);
   }
 };
+
 useEffect(() => {
   if (selectedEquipments.length > 0 && startDate && endDate) {
     fetchInterventionCount();
@@ -254,8 +265,8 @@ const fetchInterventionCount = async () => {
     }
   } catch (error) {
     console.error('Error fetching intervention count:', error);
-  }
-};
+  }};
+
 useEffect(() => {
   if (selectedEquipments.length > 0 && startDate && endDate) {
     fetchData();
@@ -320,11 +331,9 @@ const fetchResolvedAlertsCount = async () => {
   }
 };
 
-
 useEffect(() => {
   fetchResolvedAlertsCount();
 }, [selectedEquipments, startDate, endDate]); // Dépendances pour recharger le compte lors de leur changement
-
 
 // Fonction pour générer le rapport
 const generateAndDownloadReport = async (format) => {
@@ -345,7 +354,6 @@ const generateAndDownloadReport = async (format) => {
     setIsGenerating(false);
   }
 };
-
 
 // This function triggers the download of the report
 const downloadFile = (filePath) => {
@@ -374,6 +382,35 @@ const generateSummary = async () => {
   summary += ".";
   setReportSummary(summary);
 };
+const Report = async () => {
+  setIsGenerating(true);
+  try {
+    const response = await axios.post('http://localhost:3001/api/reports/generate-pdf', {
+      startDate,
+      endDate,
+      equipmentIds: selectedEquipments
+    });
+    setIsGenerating(false);
+    // Open the PDF in a new tab
+    window.open(response.data.url, '_blank');
+  } catch (error) {
+    console.error('Failed to generate report:', error);
+    setIsGenerating(false);
+  }
+};
+
+useEffect(() => {
+  // Fonction pour supprimer l'alerte après 45 secondes
+  const removeAlertAfterTimeout = (index) => {
+    setTimeout(() => {
+      setAlerts((prevAlerts) => prevAlerts.filter((_, i) => i !== index));
+    }, 45000); // 45 secondes
+  };
+
+  // Ajoutez les alertes et configurez leur suppression après 45 secondes
+  alerts.forEach((_, index) => removeAlertAfterTimeout(index));
+}, [alerts]); // Exécutez cet effet chaque fois que les alertes changent
+
 
 return (
     <Box m="20px">
@@ -383,21 +420,25 @@ return (
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
         <Box gridColumn="span 12" p="20px">
-        <Typography variant="h6" color="inherit">
-  Alertes récentes
-</Typography>
-{alerts.map((alert, index) => (
-  <Alert
-    key={index}
-    severity={alert.notificationColor} // Utilisation de la couleur assignée dans l'écouteur socket
-    icon={<ErrorOutlineIcon fontSize="inherit" />}
-    sx={{ my: 2 }}
-  >
-    {alert.message} 
-  </Alert>
-))}
-</Box>
-       
+      <Typography variant="h6" color="inherit">
+        Alertes récentes
+      </Typography>
+      {alerts.length > 0 ? (
+        alerts.map((alert, index) => (
+          <Alert
+            key={index}
+            severity={alert.notificationColor || 'info'}
+            icon={<ErrorOutlineIcon fontSize="inherit" />}
+            sx={{ my: 2 }}
+          >
+            {alert.message || "Aucun message"}
+          </Alert>
+        ))
+      ) : (
+        <Typography>Aucune alerte récente.</Typography>
+      )}
+    </Box>
+      
 <Box
       display="flex"
       alignItems="center"
@@ -472,7 +513,13 @@ return (
         />
       </FormGroup>
 
- 
+      <Button
+  onClick={() => Report()}
+  disabled={isGenerating}
+>
+  {isGenerating ? 'Generating Report...' : 'Download Report'}
+</Button>
+
     </Box>
 
       </Box>
@@ -482,11 +529,6 @@ return (
         gridAutoRows="140px"
         gap="20px"
       >
-      
-       
-          
- 
-        
         <Box
   gridColumn="span 4"
   backgroundColor={colors.primary[400]}
@@ -505,7 +547,6 @@ return (
       />
     }
   />
-
 </Box>
 {
   reportSummary && (
@@ -530,8 +571,7 @@ return (
     <PersonAddIcon
       sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
     />
-  }
-  
+  } 
 />
         </Box>  
         <Box
@@ -685,7 +725,7 @@ return (
   ))}
 </Box>
 <Box
-          gridColumn="span 4"
+          gridColumn="span 6"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
         >
@@ -706,10 +746,8 @@ return (
 />
           </Box>
         </Box>
-      
-       
         <Box
-          gridColumn="span 4"
+          gridColumn="span 6"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
         >
@@ -732,23 +770,7 @@ return (
     )}
           </Box>
         </Box>
-        <Box
-          gridColumn="span 4"
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-          padding="30px"
-        >
-          <Typography
-            variant="h5"
-            fontWeight="600"
-            sx={{ marginBottom: "15px" }}
-          >
-            Geography Based Traffic
-          </Typography>
-          <Box height="200px">
-            <GeographyChart isDashboard={true} />
-          </Box>
-        </Box>
+       
       </Box>
     </Box>
   );
