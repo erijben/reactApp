@@ -33,7 +33,7 @@ const Intervention = () => {
   useEffect(() => {
     const fetchInterventions = async () => {
       try {
-        const { data } = await axios.get(`https://nodeapp-2h1p.onrender.com/interventions/search?search=${search}`);
+        const { data } = await axios.get(`https://nodeapp-2h1p.onrender.com/api/interventions/search?search=${search}`);
         setInterventions(data);
       } catch (error) {
         console.error('Erreur lors du chargement des interventions:', error);
@@ -64,7 +64,7 @@ const Intervention = () => {
 
   const handleAddIntervention = async (values) => {
     try {
-      const response = await axios.post('https://nodeapp-2h1p.onrender.com/interventions', values);
+      const response = await axios.post('https://nodeapp-2h1p.onrender.com/api/interventions', values);
       if (response.data.success) {
         setSuccessMessage("Intervention ajoutée avec succès");
       } else {

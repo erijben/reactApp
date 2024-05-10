@@ -57,7 +57,7 @@ const Team = () => {
   
     // Si l'état de l'équipement est fonctionnel, vérifiez s'il est déjà configuré
     try {
-      const response = await axios.get(`https://nodeapp-2h1p.onrender.com/config/isConfigured/${row.id}`);
+      const response = await axios.get(`https://nodeapp-2h1p.onrender.com/api/config/isConfigured/${row.id}`);
       if (response.data.isConfigured) {
         alert("L'équipement est déjà configuré.");
       } else {
