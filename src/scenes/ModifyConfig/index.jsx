@@ -31,7 +31,7 @@ const ModifyConfig = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/config/configs/${id}`);
+        const response = await axios.get(`https://nodeapp-2h1p.onrender.com/config/configs/${id}`);
         setConfigData(response.data);
         setLoading(false);
       } catch (error) {
@@ -45,7 +45,7 @@ const ModifyConfig = () => {
 
   const handleModifyConfig = async (values, { setSubmitting }) => {
     try {
-      const response = await axios.put(`http://localhost:3001/config/configs/${id}`, values);
+      const response = await axios.put(`https://nodeapp-2h1p.onrender.com/config/configs/${id}`, values);
       setSuccessMessage("Configuration modifiée avec succès.");
       setTimeout(() => {
         navigate('/config'); // Remplacez ceci par le chemin réel de votre liste d'équipements

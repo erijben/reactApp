@@ -21,7 +21,7 @@ const Ping = () => {
           return;
         }
         
-        const response = await axios.get(`http://localhost:3001/api/pingResults/equip/${equipmentId}`);
+        const response = await axios.get(`https://nodeapp-2h1p.onrender.com/pingResults/equip/${equipmentId}`);
         if (response.status === 200) {
           const data = response.data;
           console.log('Ping Results:', data);

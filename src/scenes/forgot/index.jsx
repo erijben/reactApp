@@ -14,7 +14,7 @@ const ResetPasswordForm = () => {
     event.preventDefault();
     try {
       // Remplacez par votre API de réinitialisation de mot de passe
-      const response = await fetch('http://localhost:3001/auth/reset-password', {
+      const response = await fetch('https://nodeapp-2h1p.onrender.com/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

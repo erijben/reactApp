@@ -30,7 +30,7 @@ const LineChart = ({ selectedEquipments, startDate, endDate, isDashboard = false
     const fetchData = async () => {
       if (selectedEquipments.length > 0 && startDate && endDate) {
         try {
-          const response = await axios.post('http://localhost:3001/api/erij', {
+          const response = await axios.post('https://nodeapp-2h1p.onrender.com/erij', {
             startDate,
             endDate,
             equipmentIds: selectedEquipments.map(id => id.toString()),

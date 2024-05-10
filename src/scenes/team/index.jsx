@@ -30,7 +30,7 @@ const Team = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/equip");
+        const response = await axios.get("https://nodeapp-2h1p.onrender.com/equip");
         const transformedData = response.data.map(row => ({
           ...row,
           id: row._id,  // Add an 'id' property with the value of '_id'
@@ -57,7 +57,7 @@ const Team = () => {
   
     // Si l'état de l'équipement est fonctionnel, vérifiez s'il est déjà configuré
     try {
-      const response = await axios.get(`http://localhost:3001/api/config/isConfigured/${row.id}`);
+      const response = await axios.get(`https://nodeapp-2h1p.onrender.com/config/isConfigured/${row.id}`);
       if (response.data.isConfigured) {
         alert("L'équipement est déjà configuré.");
       } else {
@@ -82,7 +82,7 @@ const Team = () => {
           return;
       }
       // Make sure the endpoint path matches
-      await axios.delete(`http://localhost:3001/equip/${row.id}`);
+      await axios.delete(`https://nodeapp-2h1p.onrender.com/equip/${row.id}`);
 
       console.log('Equipment deleted successfully');
   
@@ -109,7 +109,7 @@ const Team = () => {
   
       // After deletion or error, refetch the equipment data
       try {
-        const updatedData = await axios.get("http://localhost:3001/equip");
+        const updatedData = await axios.get("https://nodeapp-2h1p.onrender.com/equip");
         const transformedData = updatedData.data.map((row) => ({
           ...row,
           id: row._id,
@@ -125,7 +125,7 @@ const Team = () => {
     const equipId = row.id;
   
     try {
-      const response = await axios.post(`http://localhost:3001/pingtest/manual`, { ip: equipIp, equipId });
+      const response = await axios.post(`https://nodeapp-2h1p.onrender.com/pingtest/manual`, { ip: equipIp, equipId });
   
       if (response.status === 200) {
         if (response.data.success) {

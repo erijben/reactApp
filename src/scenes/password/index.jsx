@@ -12,7 +12,7 @@ const ForgotPasswordForm = () => {
     event.preventDefault();
     try {
       // Ici, remplacez l'URL par votre API de réinitialisation de mot de passe
-      const response = await fetch('http://localhost:3001/auth/forgot-password', {
+      const response = await fetch('https://nodeapp-2h1p.onrender.com/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
