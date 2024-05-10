@@ -17,19 +17,28 @@ export const AuthContextProvider = ({ children }) => {
         const data  = await axios.post("https://nodeapp-ectt.onrender.com/auth/login", { email, password });
         console.log("API response data:", data);
 
-        if (data.data.accessToken) {
-          const decoded = jwtDecode(data.data.accessToken);
-          setCurrentUser({ ...data.data.user, token: data.data.accessToken, role: decoded.role });
-          localStorage.setItem("user", JSON.stringify({ ...data.data.user, token: data.data.accessToken, role: decoded.role }));
-          navigate('/dashboard');
-        } else {
-          console.log("No access token received");
+        if (data.accessToken) {
+          const decoded = jwtDecode(data.accessToken);
+            console.log("Login successful, received data:", data);
+            console.log("Rôle décodé :", decoded.role);
+            setCurrentUser({ ...data.user, token: data.accessToken, role: decoded.role });
+            localStorage.setItem("user", JSON.stringify({ ...data.user, token: data.accessToken, role: decoded.role }));
+    
+            if (decoded.role === "technicienReseau") {
+              console.log("Navigating to dashboard as technicienReseau...");
+              navigate('/dashboard');
+            } else {
+              console.log("Navigating to another page based on role...");
+              navigate('/other-route'); // Change to appropriate route based on other roles
+            }
+          } else {
+            console.log("No access token received");
+          }
+        } catch (error) {
+          console.error("Login failed:", error);
+          alert('Login failed: ' + (error.response?.data?.message || 'Unknown error'));
         }
-    } catch (error) {
-        console.error("Login failed:", error);
-    }
-};
-
+      };
   const logout = async () => {
     localStorage.removeItem("user");
     setCurrentUser(null); // Update the currentUser state after logout

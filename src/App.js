@@ -32,10 +32,15 @@ import User from "./scenes/user";
 import ResetPasswordForm from "./scenes/forgot";
 import ForgotPasswordForm from "./scenes/password";
 import TTLStatsPieChart from "./components/Pie";
+import { createContext, useContext, useState } from "react";
 
 function App() {
   const [theme, colorMode] = useMode();
-  const { currentUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const location = useLocation(); 
   const isLoginPage = location.pathname === '/';
   const isForgotPasswordPage = location.pathname === '/forgot' || location.pathname === '/password';

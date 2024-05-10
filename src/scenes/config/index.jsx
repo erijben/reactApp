@@ -16,6 +16,7 @@ const Config = () => {
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+  
   const navigate = useNavigate();
   useEffect(() => {
     const fetchConfigs = async () => {
