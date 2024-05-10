@@ -1,64 +1,52 @@
 import axios from "axios";
-import { createContext, useContext,useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-
+import {jwtDecode} from 'jwt-decode'; // Correct import from 'jwt-decode'
 
 export const AuthContext = createContext();
+
 export const AuthContextProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
   const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      const userDetails = JSON.parse(user);
+      const decoded = jwtDecode(userDetails.token); // Decode to verify and extract roles immediately
+      return { ...userDetails, role: decoded.role };
+    }
+    return null;
+  });
 
   const login = async (email, password) => {
     try {
-        console.log("Sending login request...");
-        const data  = await axios.post("https://nodeapp-ectt.onrender.com/auth/login", { email, password });
-        console.log("API response data:", data);
-
-        if (data.accessToken) {
-          const decoded = jwtDecode(data.accessToken);
-            console.log("Login successful, received data:", data);
-            console.log("Rôle décodé :", decoded.role);
-            setCurrentUser({ ...data.user, token: data.accessToken, role: decoded.role });
-            localStorage.setItem("user", JSON.stringify({ ...data.user, token: data.accessToken, role: decoded.role }));
-    
-            if (decoded.role === "technicienReseau") {
-              console.log("Navigating to dashboard as technicienReseau...");
-              navigate('/dashboard');
-            } else {
-              console.log("Navigating to another page based on role...");
-              navigate('/other-route'); // Change to appropriate route based on other roles
-            }
-          } else {
-            console.log("No access token received");
-          }
-        } catch (error) {
-          console.error("Login failed:", error);
-          alert('Login failed: ' + (error.response?.data?.message || 'Unknown error'));
-        }
-      };
-  const logout = async () => {
-    localStorage.removeItem("user");
-    setCurrentUser(null); // Update the currentUser state after logout
-  };
-  useEffect(() => {
-    if (currentUser && currentUser.token) {
-        const decoded = jwtDecode(currentUser.token);
-        console.log("Current user details:", decoded);
-        console.log("Current user role:", decoded.role);
+      const response = await axios.post("https://nodeapp-ectt.onrender.com/auth/login", { email, password });
+      if (response.data.accessToken) {
+        const decoded = jwtDecode(response.data.accessToken);
+        const user = { token: response.data.accessToken, role: decoded.role, ...response.data.user };
+        setCurrentUser(user);
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate(decoded.role === "technicienReseau" ? '/dashboard' : '/other-route');
+      }
+    } catch (error) {
+      console.error("Login failed:", error.response?.data?.message || "Unknown error");
+      alert(`Login failed: ${error.response?.data?.message || "Unknown error"}`);
     }
-}, [currentUser]);
+  };
 
-useEffect(() => {
-    console.log("Current user changed:", currentUser);
-    localStorage.setItem("user", JSON.stringify(currentUser));
+  const logout = () => {
+    localStorage.removeItem("user");
+    setCurrentUser(null);
+    navigate('/');
+  };
+
+  useEffect(() => {
+    console.log("Current user role:", currentUser?.role);
   }, [currentUser]);
 
   return (
     <AuthContext.Provider value={{ currentUser, login, logout }}>
-        {children}
+      {children}
     </AuthContext.Provider>
   );
 };
