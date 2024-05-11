@@ -21,6 +21,7 @@ export const AuthContextProvider = ({ children }) => {
             console.log("Login successful, received data:", data);
             console.log("Rôle décodé :", data.user.role);
             setCurrentUser({ ...data.user, token: data.accessToken });
+            
             localStorage.setItem("user", JSON.stringify({ ...data.user, token: data.accessToken }));
 // Vérifier si le token JWT est stocké dans le localStorage
 const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;

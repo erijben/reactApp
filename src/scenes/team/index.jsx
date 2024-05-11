@@ -82,9 +82,7 @@ const Team = () => {
           return;
       }
       // Make sure the endpoint path matches
-      await axios.delete(`https://nodeapp-ectt.onrender.com
-
-/equip/${row.id}`);
+      await axios.delete(`https://nodeapp-ectt.onrender.com/equip/${row.id}`);
 
       console.log('Equipment deleted successfully');
   
@@ -127,9 +125,7 @@ const Team = () => {
     const equipId = row.id;
   
     try {
-      const response = await axios.post(`https://nodeapp-ectt.onrender.com
-
-/pingtest/manual`, { ip: equipIp, equipId });
+      const response = await axios.post(`https://nodeapp-ectt.onrender.com/pingtest/manual`, { ip: equipIp, equipId });
   
       if (response.status === 200) {
         if (response.data.success) {
