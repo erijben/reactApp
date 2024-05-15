@@ -1,43 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import axios from 'axios';
+import { Box, Typography } from '@mui/material';
 
 const LineChart = ({ selectedEquipments, startDate, endDate, isDashboard = false }) => {
   const [data, setData] = useState([
     {
       id: "TTL",
-      data: [], // Pas de points de données initiaux
-      color: "transparent", // Couleur transparente pour que rien ne s'affiche
+      data: [],
+      color: "transparent",
     },
   ]);
+
   const getTickValues = () => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
     if (diffDays <= 1) {
-      // Si la plage est inférieure à 1 jour, montrez chaque heure
       return 'every 1 hour';
     } else {
-      // Sinon, montrez chaque jour
       return 'every 1 day';
     }
   };
-  
+
   useEffect(() => {
     console.log("Fetching data for LineChart with", { selectedEquipments, startDate, endDate });
     const fetchData = async () => {
       if (selectedEquipments.length > 0 && startDate && endDate) {
         try {
-          const response = await axios.post('https://nodeapp-ectt.onrender.com/api/erij', {
+          const response = await axios.post('http://localhost:3001/api/erij', {
             startDate,
             endDate,
             equipmentIds: selectedEquipments.map(id => id.toString()),
           });
 
           if (response.status === 200) {
-            setData(response.data); // Assuming the backend data is formatted correctly for Nivo
+            setData(response.data);
           } else {
             console.error('Error fetching data:', response.status);
           }
@@ -50,12 +50,11 @@ const LineChart = ({ selectedEquipments, startDate, endDate, isDashboard = false
     fetchData();
   }, [selectedEquipments, startDate, endDate]);
 
-  // Nivo Line chart settings and properties
   const nivoProperties = {
     margin: { top: 50, right: 110, bottom: 50, left: 60 },
     xScale: {
       type: 'time',
-      format: '%Y-%m-%dT%H:%M:%S.%LZ', // This format should match your date format
+      format: '%Y-%m-%dT%H:%M:%S.%LZ',
       precision: 'second',
     },
     xFormat: 'time:%Y-%m-%d',
@@ -72,7 +71,7 @@ const LineChart = ({ selectedEquipments, startDate, endDate, isDashboard = false
     },
     axisBottom: {
       format: '%b %d',
-      tickValues: getTickValues(), // Appel de la fonction pour déterminer les valeurs des ticks
+      tickValues: getTickValues(),
       legend: 'Temps',
       legendPosition: 'middle',
       legendOffset: 32,
@@ -106,11 +105,24 @@ const LineChart = ({ selectedEquipments, startDate, endDate, isDashboard = false
   };
 
   return (
-    <div id="linechart" style={{ height: 250 }}>
+    <Box id="linechart" sx={{ height: 250 }}>
       <ResponsiveLine {...nivoProperties} data={data} />
-    </div>
+      <Box display="flex" justifyContent="center" mt={2}>
+        <Box display="flex" alignItems="center" mr={2}>
+          <Box sx={{ width: 10, height: 10, backgroundColor: 'red', borderRadius: '50%', mr: 1 }} />
+          <Typography variant="body2">TTL Surpassé</Typography>
+        </Box>
+        <Box display="flex" alignItems="center" mr={2}>
+          <Box sx={{ width: 10, height: 10, backgroundColor: 'orange', borderRadius: '50%', mr: 1 }} />
+          <Typography variant="body2">TTL Passable</Typography>
+        </Box>
+        <Box display="flex" alignItems="center">
+          <Box sx={{ width: 10, height: 10, backgroundColor: 'green', borderRadius: '50%', mr: 1 }} />
+          <Typography variant="body2">TTL Idéal</Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
 export default LineChart;
-

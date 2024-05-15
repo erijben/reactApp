@@ -1,3 +1,4 @@
+
 import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { Autocomplete,Checkbox } from '@mui/material';
@@ -15,6 +16,8 @@ import StatBox from "../../components/StatBox";
 import { useEffect, useState } from "react";
 import io from 'socket.io-client';
 import axios from "axios";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import WifiTetheringIcon from '@mui/icons-material/WifiTethering';
 import { NavLink } from 'react-router-dom';
 import {TextField}  from '@mui/material';
 import { Menu, MenuItem, FormGroup, FormControlLabel } from "@mui/material";
@@ -22,11 +25,95 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'; // Importez l'i
 import { Alert, AlertTitle } from '@mui/material'; // Importez les composants Alert de MUI
 import { useSnackbar } from 'notistack';
 import TTLStatsPieChart from "../../components/Pie";
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import html2canvas from 'html2canvas';
+import CollapsibleAlertBox from '../../components/CollapsibleAlertBox'; 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
+
 const Dashboard = () => {
+  const captureAndDownloadPDF = async () => {
+    try {
+        const canvas = await html2canvas(document.querySelector("#dashboard"));
+        const imageData = canvas.toDataURL('image/png');
+        
+        const docDefinition = {
+            content: [
+                { text: 'Rapport du Dashboard', style: 'header' },
+                { text: 'Résumé des indicateurs clés', style: 'subheader' },
+                {
+                    columns: [
+                        {
+                            width: '*',
+                            stack: [
+                                { text: `Nombre de pings: ${pingCount !== null ? pingCount : "-"}` },
+                                { text: `Nombre des interventions: ${InterventionCount !== null ? InterventionCount : "-"}` },
+                                { text: `Alertes résolues: ${resolvedAlertsCount !== null ? resolvedAlertsCount : "-"}` },
+                            ]
+                        }
+                    ]
+                },
+                { text: 'Équipement(s) sélectionné(s)', style: 'subheader' },
+                {
+                    ul: selectedEquipments.map(id => {
+                        const equip = equipments.find(e => e._id === id);
+                        return equip ? equip.Nom : "Équipement non spécifié";
+                    })
+                },
+                { text: 'Plage de dates', style: 'subheader' },
+                { text: `Début: ${startDate}`, margin: [0, 0, 0, 10] },
+                { text: `Fin: ${endDate}`, margin: [0, 0, 0, 10] },
+                { text: 'Graphiques et analyses', style: 'subheader' },
+                {
+                    image: imageData,
+                    width: 500
+                },
+                { text: 'Interprétation des résultats', style: 'subheader' },
+                {
+                    ul: [
+                        'Les pings sont réguliers et montrent une bonne stabilité de la connexion.',
+                        'Le nombre d\'interventions est cohérent avec les alertes reçues.',
+                        'Aucune alerte résolue pour cette période, nécessitant peut-être une analyse plus approfondie.'
+                    ]
+                },
+                { text: 'Détails des interventions récentes', style: 'subheader' },
+                {
+                    table: {
+                        body: [
+                            ['Type', 'Date', 'Détails'],
+                            ...interventions.slice(0, 5).map(intervention => [
+                                intervention.type,
+                                new Date(intervention.date).toLocaleDateString("fr-FR"),
+                                { text: 'Voir détails', link: `http://localhost:3000/listes/${intervention._id}`, style: 'link' }
+                            ])
+                        ]
+                    }
+                }
+            ],
+            styles: {
+                header: {
+                    fontSize: 22,
+                    bold: true
+                },
+                subheader: {
+                    fontSize: 18,
+                    bold: true,
+                    margin: [0, 10, 0, 5]
+                },
+                link: {
+                    color: 'blue',
+                    decoration: 'underline'
+                }
+            }
+        };
+        
+        pdfMake.createPdf(docDefinition).download('dashboard-report.pdf');
+    } catch (error) {
+        console.error('Failed to capture and generate PDF:', error);
+    }
+};
   const { enqueueSnackbar } = useSnackbar();
   const [alerts, setAlerts] = useState([]);
   const [resolvedAlertsCount, setResolvedAlertsCount] = useState(null); 
@@ -46,7 +133,8 @@ const Dashboard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportSummary, setReportSummary] = useState('');
   const [exportFile, setExportFile] = useState(null);
-  const socket = io('http://localhost:3000'); // Assurez-vous que l'URL correspond à votre serveur
+  const socket = io('*'); // Assurez-vous que l'URL correspond à votre serveur
+  const [isLoading, setIsLoading] = useState(false);
 
 
   // Écoute de l'événement 'newAlert' pour recevoir les nouvelles alertes
@@ -59,10 +147,11 @@ socket.on('newAlert', (alert) => {
   // Vérifier si tous les équipements sont sélectionnés
   const isAllSelected = equipments.length > 0 && selectedEquipments.length === equipments.length;
 
+
   const fetchBarChartData = async () => {
     try {
       if (selectedEquipments.length > 0 && startDate && endDate) {
-        const response = await axios.post('https://nodeapp-ectt.onrender.com/api/barChartData', {
+        const response = await axios.post('http://localhost:3001/api/barChartData', {
           startDate: startDate,
           endDate: endDate,
           equipmentIds: selectedEquipments
@@ -106,6 +195,7 @@ socket.on('newAlert', (alert) => {
       }
     });
   };
+
   const handleSelectAll = (event) => {
     if (event.target.checked) {
       // Sélectionner tous les équipements
@@ -130,7 +220,7 @@ socket.on('newAlert', (alert) => {
   const fetchEquipments = async () => {
     try {
       
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
+      const response = await axios.get('http://localhost:3001/equip');
       setEquipments(response.data);
     } catch (error) {
       console.error('Error fetching equipments:', error);
@@ -144,7 +234,7 @@ socket.on('newAlert', (alert) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("https://nodeapp-ectt.onrender.com/api/interventions");
+        const response = await axios.get("http://localhost:3001/api/interventions");
         setInterventions(response.data);
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);
@@ -154,9 +244,10 @@ socket.on('newAlert', (alert) => {
     fetchData();
   }, []);
 
+
   useEffect(() => {
-    const socket = io('https://nodeapp-ectt.onrender.com');
-  
+    const socket = io('http://localhost:3001');
+
     socket.on('newAlert', (newAlert) => {
       console.log('Nouvelle alerte reçue:', newAlert);
       let alertMessage = '';
@@ -167,10 +258,10 @@ socket.on('newAlert', (alert) => {
         // Personnalisez le message pour une alerte automatique
         alertMessage = `Surveillance Automatique: ${newAlert.equipmentName || 'Équipement non spécifié'} - ${newAlert.message}`;
         switch (newAlert.status) {
-          case 'Dysfonctionnement':
+          case 'dysfonctionnel':
             notificationColor = 'error';
             break;
-          case 'Problème de réseau potentiel':
+          case 'Problème de réseau':
             notificationColor = 'warning';
             break;
           case 'En bon état':
@@ -225,7 +316,7 @@ socket.on('newAlert', (alert) => {
   const fetchPingCount = async () => {
     try {
       if (selectedEquipments.length > 0 && startDate && endDate) {
-        const response = await axios.post('https://nodeapp-ectt.onrender.com/api/pingResults/equip/count', {
+        const response = await axios.post('http://localhost:3001/api/pingResults/equip/count', {
           startDate: startDate,
           endDate: endDate,
           equipmentIds: selectedEquipments
@@ -251,7 +342,7 @@ useEffect(() => {
 
 const fetchInterventionCount = async () => {
   try {
-    const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions/equip/count', {
+    const response = await axios.post('http://localhost:3001/api/interventions/equip/count', {
       startDate: startDate,
       endDate: endDate,
       equipmentIds: selectedEquipments
@@ -275,7 +366,7 @@ useEffect(() => {
 const fetchData = async () => {
 try {
   if (selectedEquipments.length > 0 && startDate && endDate) {
-    const response = await axios.post("https://nodeapp-ectt.onrender.com/api/erij", {
+    const response = await axios.post("http://localhost:3001/api/erij", {
       startDate: startDate,
       endDate: endDate,
       equipmentIds: selectedEquipments
@@ -300,7 +391,7 @@ useEffect(() => {
 const fetchInterventions = async () => {
   try {
     if (selectedEquipments.length > 0 && startDate && endDate) {
-      const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions/filter', {
+      const response = await axios.post('http://localhost:3001/api/interventions/filter', {
         startDate: startDate,
         endDate: endDate,
         equipmentIds: selectedEquipments
@@ -319,7 +410,7 @@ const fetchInterventions = async () => {
 const fetchResolvedAlertsCount = async () => {
   if (selectedEquipments.length > 0 && startDate && endDate) {
     try {
-      const response = await axios.post('https://nodeapp-ectt.onrender.com/api/alerts/resolved/count', {
+      const response = await axios.post('http://localhost:3001/api/alerts/resolved/count', {
         startDate: startDate,
         endDate: endDate,
         equipmentIds: selectedEquipments
@@ -339,7 +430,7 @@ useEffect(() => {
 const generateAndDownloadReport = async (format) => {
   setIsGenerating(true);
   try {
-    const response = await axios.post('https://nodeapp-ectt.onrender.com/api/reports/generate', {
+    const response = await axios.post('http://localhost:3001/api/reports/generate', {
       startDate, endDate, equipmentIds: selectedEquipments,
     });
     setIsGenerating(false);
@@ -361,50 +452,12 @@ const downloadFile = (filePath) => {
   window.open(filePath, '_blank');
 };
 
-const generateSummary = async () => {
-  // Vous pouvez utiliser un appel API ici pour obtenir les données
-  const response = await axios.get("/api/some-endpoint");
-  const data = response.data;
-
-  // Générez le résumé en fonction des données
-  let summary = "Lors de ces interventions, ";
-  data.forEach((item, index) => {
-    summary += `pour l'équipement ${item.equipmentName}, `;
-    if (item.pingCount === 0) {
-      summary += "aucune anomalie détectée ";
-    } else {
-      summary += `latence observée de ${item.latency} ms `;
-    }
-    if (index < data.length - 1) {
-      summary += "; ";
-    }
-  });
-  summary += ".";
-  setReportSummary(summary);
-};
-const Report = async () => {
-  setIsGenerating(true);
-  try {
-    const response = await axios.post('https://nodeapp-ectt.onrender.com/api/reports/generate-pdf', {
-      startDate,
-      endDate,
-      equipmentIds: selectedEquipments
-    });
-    setIsGenerating(false);
-    // Open the PDF in a new tab
-    window.open(response.data.url, '_blank');
-  } catch (error) {
-    console.error('Failed to generate report:', error);
-    setIsGenerating(false);
-  }
-};
-
 useEffect(() => {
   // Fonction pour supprimer l'alerte après 45 secondes
   const removeAlertAfterTimeout = (index) => {
     setTimeout(() => {
       setAlerts((prevAlerts) => prevAlerts.filter((_, i) => i !== index));
-    }, 45000); // 45 secondes
+    }, 200000); // 45 secondes
   };
 
   // Ajoutez les alertes et configurez leur suppression après 45 secondes
@@ -413,32 +466,15 @@ useEffect(() => {
 
 
 return (
+ <div id="dashboard">
     <Box m="20px">
-     <Box sx={{ position: 'fixed', bottom: 0, right: 0, m: 2 }}>
-  
+     <Box sx={{ position: 'fixed', bottom: 0, right: 0, m: 2 }}> 
 </Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
+  <Box display="flex" justifyContent="space-between" alignItems="center">
+     <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
+        <CollapsibleAlertBox alerts={alerts} />
         <Box gridColumn="span 12" p="20px">
-      <Typography variant="h6" color="inherit">
-        Alertes récentes
-      </Typography>
-      {alerts.length > 0 ? (
-        alerts.map((alert, index) => (
-          <Alert
-            key={index}
-            severity={alert.notificationColor || 'info'}
-            icon={<ErrorOutlineIcon fontSize="inherit" />}
-            sx={{ my: 2 }}
-          >
-            {alert.message || "Aucun message"}
-          </Alert>
-        ))
-      ) : (
-        <Typography>Aucune alerte récente.</Typography>
-      )}
-    </Box>
-      
+        </Box>
 <Box
       display="flex"
       alignItems="center"
@@ -491,13 +527,13 @@ return (
       <Checkbox
         icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
         checkedIcon={<CheckBoxIcon fontSize="small" />}
-        style={{ marginRight: 8 }}
+        style={{ marginRight: 5 }}
         checked={selected}
       />
       {option.Nom}
     </li>
   )}
-  style={{ width: 500 }}
+  style={{ width: 250 }}
   renderInput={(params) => (
     <TextField {...params} label="Rechercher et sélectionner des équipements" placeholder="Équipements" />
   )}
@@ -512,17 +548,25 @@ return (
           label=""
         />
       </FormGroup>
-
-      <Button
-  onClick={() => Report()}
-  disabled={isGenerating}
->
-  {isGenerating ? 'Generating Report...' : 'Download Report'}
-</Button>
-
-    </Box>
-
       </Box>
+<button 
+  onClick={captureAndDownloadPDF} 
+  style={{ 
+    backgroundColor: colors.blueAccent[700], 
+    color: colors.grey[300], 
+    fontSize: '14px', 
+    fontWeight: 'bold', 
+    padding: '10px 20px', 
+    borderRadius: '5px', 
+    cursor: 'pointer' 
+  }}
+>
+  Télécharger le rapport PDF
+</button>
+<Box>
+    </Box>
+      </Box>
+     
       <Box
         display="grid"
         gridTemplateColumns="repeat(12, 1fr)"
@@ -539,14 +583,15 @@ return (
 <StatBox
     title={pingCount !== null ? pingCount:"-"} // Utiliser le nombre de ping de l'équipement sélectionné
     subtitle="Nombre de ping"
-    progress="0.80"
+   
     increase="" // pourcentage
     icon={
-      <TrafficIcon
+      <WifiTetheringIcon 
         sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
       />
     }
   />
+
 </Box>
 {
   reportSummary && (
@@ -562,16 +607,17 @@ return (
           alignItems="center"
           justifyContent="center"
         >
-  <StatBox
+ <StatBox
   title={InterventionCount !== null ? InterventionCount : "-"}
   subtitle="Nombre des interventions"
-  progress=""
-  increase=""
+  
+ 
   icon={
-    <PersonAddIcon
-      sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-    />
-  } 
+    <AddCircleOutlineIcon 
+    sx={{ color: colors.greenAccent[600], fontSize: "26px" }}/>
+   
+  }
+  
 />
         </Box>  
         <Box
@@ -584,10 +630,9 @@ return (
           <StatBox
             title={resolvedAlertsCount !== null ? resolvedAlertsCount : "-"}
             subtitle=" Alertes résolues"
-            progress="0.50"
-            increase="+21%"
+
             icon={
-              <PointOfSaleIcon
+              <NotificationsOutlinedIcon 
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
@@ -641,29 +686,14 @@ return (
     </FormGroup>
     <MenuItem onClick={handleClose}>Done</MenuItem>
   </Menu>
-</Box>
-<Box>
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                color={colors.grey[100]}
-              >
-                Courbe
-              </Typography>
+
               <Typography
                 variant="h3"
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                TTL
+                Courbe  TTL
               </Typography>
-            </Box>
-            <Box>
-              <IconButton>
-                <DownloadOutlinedIcon
-                  sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
-                />
-              </IconButton>
             </Box>
           </Box>
           <Box height="250px" m="-20px 0 0 0">
@@ -684,7 +714,7 @@ return (
   <Button
     sx={{
       backgroundColor: colors.blueAccent[700],
-      color: colors.grey[100],
+      color: colors.grey[300],
       fontSize: "14px",
       fontWeight: "bold",
       padding: "10px 20px",
@@ -705,7 +735,6 @@ return (
             colors={colors.grey[100]}
             p="15px"
           >
-              
               <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
       Dernières interventions
     </Typography>
@@ -765,14 +794,16 @@ return (
         endDate={endDate}
         isDashboard={true}
       />
+      
     ) : (
       <Typography variant="body2">Aucun équipement sélectionné pour afficher le graphique.</Typography>
     )}
-          </Box>
-        </Box>
-       
-      </Box>
     </Box>
-  );
+  </Box>
+</Box>
+</Box>
+</div>
+);
 };
+
 export default Dashboard;

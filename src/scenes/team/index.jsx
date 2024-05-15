@@ -12,13 +12,17 @@ import Tooltip from '@mui/material/Tooltip';
 import { tokens } from "../../theme";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import io from 'socket.io-client';
 
 
 const Team = () => {
   const theme = useTheme();
+  const [alerts, setAlerts] = useState([]);
   const colors = tokens(theme.palette.mode);
   const [equipData, setEquipData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const socket = io('http://localhost:3000'); // Assurez-vous que l'URL correspond à votre serveur
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
@@ -30,7 +34,7 @@ const Team = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("https://nodeapp-ectt.onrender.com/equip");
+        const response = await axios.get("http://localhost:3001/equip");
         const transformedData = response.data.map(row => ({
           ...row,
           id: row._id,  // Add an 'id' property with the value of '_id'
@@ -45,9 +49,31 @@ const Team = () => {
     fetchData();
   }, []);
 
-  const handleButton1Click = (row) => {
-    // Logic to handle button 1 action here
+  useEffect(() => {
+    const socket = io('http://localhost:3001');
+    socket.on('newAlert', (newAlert) => {
+      console.log('New alert received:', newAlert);
+      const { equipmentId, status, message } = newAlert;
+      updateEquipmentState(equipmentId, status);
+      enqueueSnackbar(message, {
+        variant: status === 'dysfonctionnel' ? 'error' :
+                 status === 'En bon état' ? 'success' :
+                 'warning'
+      });
+    });
+    return () => {
+      socket.off('newAlert');
+      socket.close();
+    };
+  }, [enqueueSnackbar]);
+
+  const updateEquipmentState = (equipmentId, newState) => {
+    setEquipData(prevEquipData => prevEquipData.map(equip =>
+      equip.id === equipmentId ? { ...equip, Etat: newState } : equip
+    ));
   };
+
+ 
   const handleButtonClick = async (row) => {
     // Si l'état de l'équipement est "réparation" ou "dysfonctionnel", affichez une alerte.
     if (row.Etat.toLowerCase() === 'reparation' || row.Etat.toLowerCase() === 'dysfonctionnel') {
@@ -57,7 +83,7 @@ const Team = () => {
   
     // Si l'état de l'équipement est fonctionnel, vérifiez s'il est déjà configuré
     try {
-      const response = await axios.get(`https://nodeapp-ectt.onrender.com/api/config/isConfigured/${row.id}`);
+      const response = await axios.get(`http://localhost:3001/api/config/isConfigured/${row.id}`);
       if (response.data.isConfigured) {
         alert("L'équipement est déjà configuré.");
       } else {
@@ -82,7 +108,7 @@ const Team = () => {
           return;
       }
       // Make sure the endpoint path matches
-      await axios.delete(`https://nodeapp-ectt.onrender.com/equip/${row.id}`);
+      await axios.delete(`http://localhost:3001/equip/${row.id}`);
 
       console.log('Equipment deleted successfully');
   
@@ -109,7 +135,7 @@ const Team = () => {
   
       // After deletion or error, refetch the equipment data
       try {
-        const updatedData = await axios.get("https://nodeapp-ectt.onrender.com/equip");
+        const updatedData = await axios.get("http://localhost:3001/equip");
         const transformedData = updatedData.data.map((row) => ({
           ...row,
           id: row._id,
@@ -123,9 +149,9 @@ const Team = () => {
   const handlePingButtonClick = async (row) => {
     const equipIp = row.AdresseIp;
     const equipId = row.id;
-  
+
     try {
-      const response = await axios.post(`https://nodeapp-ectt.onrender.com/pingtest/manual`, { ip: equipIp, equipId });
+      const response = await axios.post(`http://localhost:3001/pingtest/manual`, { ip: equipIp, equipId });
   
       if (response.status === 200) {
         if (response.data.success) {
@@ -210,7 +236,7 @@ const Team = () => {
           variant="contained"
           size="small"
           sx={{ padding: '5px 8px', minWidth: '15px', fontSize: '0.5rem' }}
-          disabled={currentUser?.role === 'technicienReseau'}
+       
         >
           Configurer
         </Button>
@@ -266,7 +292,15 @@ const Team = () => {
       headerAlign: "center",
       align: "center",
       flex: 1,
+      renderCell: (params) => (
+        <span style={{ color: params.row.Etat === 'dysfonctionnel' ? 'red' : 
+                              params.row.Etat === 'En bon état' ? 'green' :
+                              'orange' }}>
+          {params.row.Etat}
+        </span>
+      ),
     },
+    
     {
       field: "Actions",
       headerName: "Actions",

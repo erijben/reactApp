@@ -47,6 +47,7 @@
     "react-scripts": "^5.0.1",
     "react-simple-maps": "^3.0.0",
     "react-vis-network-graph": "^3.0.1",
+    "rfidreader": "^0.0.4",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "vis-data": "^7.1.9",
@@ -65,7 +66,10 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "globals": {
+      "NDEFReader": "readonly"
+    }
   },
   "browserslist": {
     "production": [

@@ -87,6 +87,34 @@ function App() {
                           <Route path="/contacts" element={<Contacts />} />
                           <Route path="/InterventionDetails" element={< InterventionDetails/>} />
                           <Route path="/geography" element={<Geography />} />
+                          <Route path="/invoices" element={<Invoices />} />
+                <Route path="/form" element={<Form />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/bar" element={<Bar />} />
+                <Route path="/pie" element={<Pie />} />
+                <Route path="/line" element={<Line />} />
+                <Route path="/geography" element={<Geography />} />
+                <Route path="/ping" element={<Ping />} />
+                <Route path="/ping/:equipmentId" element={<Ping />} />
+                <Route path="/modify/:id" element={<ModifyEquipment />} />
+                <Route path="/modify-config/:id" element={<ModifyConfig />} />
+                <Route path="//modify-user/:id" element={<ModifyUser />} />
+                <Route path="/intervention" element={<Intervention />} />
+                <Route path="/liste" element={<Listes />} />
+                <Route path="/listes" element={<Listes />} />
+           
+                <Route path="/listes/:id" element={<InterventionDetails />} />
+                <Route path="/Topologie" element={<Topologie/>} />
+                <Route path="/equip/:id" element={<Listes />} />
+                <Route path="/alert/:equipmentId" element={<Alert />} />
+                <Route path="/invoices/:equipmentId" element={<Invoices/>} />
+                <Route path="/config" element={<Config/>} />
+                <Route path="/alert"element={<Alert/>}/>
+                <Route path="/pie/:equipmentId" element={<Pie />} />
+                <Route path="/user" element={<User/>} />
+                <Route path="/forgot" element={ <ResetPasswordForm/>} />
+                <Route path="/password" element={ <ForgotPasswordForm/>} />
                           <Route path="/Pie" element={<TTLStatsPieChart />} />
                           <Route path="*" element={<Navigate replace to="/dashboard" />} />
                         </>
@@ -101,6 +129,7 @@ function App() {
                           <Route path="/user" element={< User/>} />
                           <Route path="/form" element={< Form/>} />
                           <Route path="//modify-user/:id" element={<ModifyUser />} />
+                          
                           <Route path="/bar" element={<Bar />} />
                 <Route path="/pie" element={<Pie />} />
                 <Route path="/line" element={<Line />} />

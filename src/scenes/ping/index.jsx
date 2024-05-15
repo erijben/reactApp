@@ -21,7 +21,7 @@ const Ping = () => {
           return;
         }
         
-        const response = await axios.get(`https://nodeapp-ectt.onrender.com/api/pingResults/equip/${equipmentId}`);
+        const response = await axios.get(`http://localhost:3001/api/pingResults/equip/${equipmentId}`);
         if (response.status === 200) {
           const data = response.data;
           console.log('Ping Results:', data);
@@ -40,15 +40,20 @@ const Ping = () => {
 
   const columns = [
     {
-      field: "ID",
-      headerName: "ID",
-      flex: 2,
-      cellClassName: "name-column--cell",
+      field: "status",
+      headerName: "Statut",
+      flex: 1,
+      width: 30,
+      renderCell: (params) => (
+        <div style={{ color: params.row.success ? "green" : "red" }}>
+          {params.row.success ? "Success" : "Failed"}
+        </div> ),
     },
+    
     {
       field: "size",
       headerName: "Size",
-      flex: 2,
+      flex: 1,
       cellClassName: "name-column--cell",
     },
  
@@ -59,7 +64,10 @@ const Ping = () => {
       headerAlign: "left",
       align: "left",
       width: 50,
-      flex: 2,
+      flex: 1,
+      renderCell: (params) => (
+        params.row.success ? params.value.join(", ") : "[]"
+      )
     },
  
     {
@@ -69,7 +77,10 @@ const Ping = () => {
       headerAlign: "left",
       align: "left",
       width: 50,
-      flex: 2,
+      flex: 1,
+      renderCell: (params) => (
+        params.row.success ? params.value.join(", ") : "[]"
+      )
     },
     {
       field: "packetsSent",
@@ -116,17 +127,10 @@ const Ping = () => {
     {
       field: "timestamp",
       headerName: "Timestamp",
-      flex: 2,
+      flex: 1,
+      width: 30,
     },
-    {
-      field: "status",
-      headerName: "Statut",
-      flex: 2,
-      renderCell: (params) => (
-        <div style={{ color: params.row.success ? "green" : "red" }}>
-          {params.row.success ? "Success" : "Failed"}
-        </div> ),
-    },
+   
    
   ];
 

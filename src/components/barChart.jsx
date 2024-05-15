@@ -16,7 +16,7 @@ const BarChart = ({ isDashboard = true, equipmentIds, startDate, endDate }) => {
     const fetchData = async () => {
       try {
         if (equipmentIds.length > 0 && startDate && endDate) {
-          const response = await axios.post("https://nodeapp-ectt.onrender.com/api/barChartData", {
+          const response = await axios.post("http://localhost:3001/api/barChartData", {
             startDate,
             endDate,
             equipmentIds,

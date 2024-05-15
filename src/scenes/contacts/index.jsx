@@ -6,15 +6,51 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+import { Autocomplete } from '@mui/material';
+
+
+// Define the RfidScanner component outside of the Contacts component
+const RfidScanner = ({ setRfid }) => {
+  const { enqueueSnackbar } = useSnackbar();
+
+  const readNfcTag = async () => {
+      if ("NDEFReader" in window) {
+          try {
+              const reader = new NDEFReader();
+              await reader.scan();
+              reader.onreading = event => {
+                  const decoder = new TextDecoder();
+                  for (const record of event.message.records) {
+                      setRfid(decoder.decode(record.data));
+                  }
+              };
+              
+          } catch (error) {
+              console.error("Error reading NFC tag:", error);
+              enqueueSnackbar("Error reading NFC tag: " + error.message, { variant: 'error' });
+          }
+      } else {
+          enqueueSnackbar("NFC is not supported on this device or browser.", { variant: 'warning' });
+      }
+  };
+
+  return (
+      <Button onClick={readNfcTag} variant="contained" color="primary">
+          Scan RFID
+      </Button>
+  );
+};
 
 const Contacts = () => {
+  const [rfid, setRfid] = useState('');
+  const [equipments, setEquipments] = useState([]);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
-
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const navigate = useNavigate();
-   
-  
+  const [search, setSearch] = useState('');
+
   const handleAddEquipment = async (values) => {
     try {
       const connecteAIds = values.ConnecteA.split(',').map(id => id.trim()); // Créer un tableau à partir de la chaîne
@@ -32,7 +68,7 @@ const Contacts = () => {
 
       console.log("Nouvel équipement :", newEquipment);
 
-      const response = await axios.post('https://nodeapp-ectt.onrender.com/equip/add', newEquipment);
+      const response = await axios.post('http://localhost:3001/equip/add', newEquipment);
 
       console.log("Réponse du serveur :", response.data);
 
@@ -56,7 +92,18 @@ const Contacts = () => {
       setSuccessMessage(null);
     }
   };
-
+ 
+  useEffect(() => {
+    const fetchEquipments = async () => {
+      try {
+        const { data } = await axios.get('http://localhost:3001/equip');
+        setEquipments(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des équipements:', error);
+      }
+    };
+    fetchEquipments();
+  }, []);
   return (
     <Box m="20px">
       <Header title="Ajouter un équipement" subtitle="Voir la liste des équipements" />
@@ -85,6 +132,7 @@ const Contacts = () => {
           handleSubmit,
         
         }) => (
+          
           <form onSubmit={handleSubmit} method="POST">
             <Box
               display="grid"
@@ -133,17 +181,16 @@ const Contacts = () => {
                 helperText={touched.AdresseIp && errors.AdresseIp}
                 sx={{ gridColumn: "span 4" }}
               />
-               <TextField
+                <RfidScanner setRfid={setRfid} />
+              <TextField
                 fullWidth
                 variant="filled"
                 type="text"
                 label="RFID"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.RFID}
+                value={rfid}
                 name="RFID"
-                error={!!touched.RFID && !!errors.RFID}
-                helperText={touched.RFID && errors.RFID}
+                error={!!errors.RFID}
+                helperText={errors.RFID}
                 sx={{ gridColumn: "span 4" }}
               />
               <TextField
@@ -172,21 +219,26 @@ const Contacts = () => {
                 helperText={touched.Etat && errors.Etat}
                 sx={{ gridColumn: "span 4" }}
               />
-             
-               <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="ConnecteA"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.ConnecteA}
-                name="ConnecteA"
-                error={!!touched.ConnecteA && !!errors.ConnecteA}
-                helperText={touched.ConnecteA && errors.ConnecteA}
-                sx={{ gridColumn: "span 4" }}
-              />
-              <TextField
+         
+              <Autocomplete
+  fullWidth
+  freeSolo
+  disableClearable
+  options={equipments.map(equipment => equipment.Nom)}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Sélectionner équipement ConnectA"
+      variant="outlined"
+      fullWidth
+      onChange={(event) => setSearch(event.target.value)}
+      onBlur={handleBlur}
+      error={!!touched.ConnecteA && !!errors.ConnecteA}
+      helperText={touched.ConnecteA && errors.ConnecteA}
+    />
+  )}
+/>
+                <TextField
                 fullWidth
                 variant="filled"
                 type="text"
