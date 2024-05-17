@@ -15,7 +15,9 @@ const ModifyUser = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    axios.get(`http://localhost:3001/user/users/${id}`)
+    axios.get(`https://nodeappectt.onrender.com
+
+/user/users/${id}`)
       .then(response => {
         setUser(response.data);
         setLoading(false);
@@ -34,7 +36,9 @@ const ModifyUser = () => {
   });
 
   const handleSubmit = (values, actions) => {
-    axios.put(`http://localhost:3001/user/users/${id}`, values)
+    axios.put(`https://nodeappectt.onrender.com
+
+/user/users/${id}`, values)
       .then(response => {
         setSuccessMessage("Utilisateur modifié avec succès.");
         // Ici nous ajoutons un délai similaire à ModifyEquipment avant la redirection

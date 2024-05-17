@@ -44,7 +44,7 @@ const Alert = () => {
       return;
     }
     try {
-      const response = await axios.get(`http://localhost:3001/api/pingResults/alert/${equipmentId}`, {
+      const response = await axios.get(`https://nodeappectt.onrender.com/api/pingResults/alert/${equipmentId}`, {
         params: { startDate, endDate }
       });
 
@@ -114,7 +114,7 @@ const Alert = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/config/equip/${equipmentId}`);
+        const response = await axios.get(`https://nodeappectt.onrender.com/api/config/equip/${equipmentId}`);
         setConfig(response.data);
       } catch (error) {
         console.error('Error fetching configuration:', error);
@@ -148,7 +148,7 @@ const Alert = () => {
   
   const fetchStatsFromServer = async (threshold, selectedAttributes, attr) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/pingResults/stats/${equipmentId}`, {
+      const response = await axios.get(`https://nodeappectt.onrender.com/api/pingResults/stats/${equipmentId}`, {
         params: { startDate, endDate, threshold, attr }, // Inclure `attr` ici
       });
       if (response.status === 200) {
@@ -327,7 +327,7 @@ const Alert = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/pingResults');
+      const response = await fetch('https://nodeappectt.onrender.com/api/pingResults');
       if (response.ok) {
         const data = await response.json();
         const attributes = Object.keys(data[0]);

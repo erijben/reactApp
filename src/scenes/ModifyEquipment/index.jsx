@@ -1,44 +1,39 @@
-// Import des composants nécessaires
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button } from "@mui/material";  // Added Button
+import { Box, TextField, Button, Snackbar, Autocomplete } from "@mui/material"; 
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
 import axios from 'axios';
 import { useParams } from "react-router-dom";
-import { useNavigate } from 'react-router-dom'; // Assurez-vous d'importer useNavigate
-
+import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 
 // Schéma de validation avec Yup
 const checkoutSchema = yup.object().shape({
   Nom: yup.string().required("Champ requis"),
   Type: yup.string().required("Champ requis"),
   AdresseIp: yup.string().required("Champ requis"),
+  RFID: yup.string().required("Champ requis"),
   Emplacement: yup.string().required("Champ requis"),
   Etat: yup.string().required("Champ requis"),
+  ConnecteA: yup.string().required("L'ID de l'équipement connecté est requis")
 });
 
 // Composant de l'interface de modification
 const ModifyEquipment = () => {
+  const [equipments, setEquipments] = useState([]);
   const [equipmentData, setEquipmentData] = useState({});
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
-  // Utilisez l'ID de l'équipement à partir de l'URL
   const { id } = useParams();
-  const [equipment, setEquipment] = useState({
-    Nom: '',
-    Type: '',
-    AdresseIp: '',
-    Emplacement: '',
-    Etat: ''
-  });
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchEquipmentData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/equip/equip/${id}`);
+        const response = await axios.get(`https://nodeappectt.onrender.com/equip/equip/${id}`);
         console.log("Données de l'équipement existant :", response.data);
         setEquipmentData(response.data);
       } catch (error) {
@@ -48,21 +43,29 @@ const ModifyEquipment = () => {
       }
     };
   
+    const fetchEquipments = async () => {
+      try {
+        const { data } = await axios.get('https://nodeappectt.onrender.com/equip');
+        setEquipments(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des équipements:', error);
+      }
+    };
+
     fetchEquipmentData();
+    fetchEquipments();
   }, [id]);
-  
 
   const handleModifyEquipment = async (values) => {
     try {
-      const response = await axios.put(`http://localhost:3001/equip/equip/${id}`, values);
+      const response = await axios.put(`https://nodeappectt.onrender.com/equip/equip/${id}`, values);
   
       if (response.data.success) {
         setSuccessMessage("Équipement modifié avec succès");
         setErrorMessage(null);
-        // Ajout d'une temporisation avant de rediriger l'utilisateur
         setTimeout(() => {
-          navigate('/team'); // Remplacez ceci par le chemin réel de votre liste d'équipements
-        }, 800); // 3000 millisecondes = 3 secondes
+          navigate('/team'); 
+        }, 800);
       } else {
         setErrorMessage(response.data.message || "Erreur inattendue lors de la modification de l'équipement");
         setSuccessMessage(null);
@@ -74,13 +77,67 @@ const ModifyEquipment = () => {
     }
   };
 
-  // Gérez les changements dans le formulaire
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEquipment((prevEquipment) => ({
-      ...prevEquipment,
-      [name]: value
-    }));
+  const RfidScanner = ({ setFieldValue }) => {
+    const [open, setOpen] = useState(false);
+    const [message, setMessage] = useState("");
+    const [nfcSupported, setNfcSupported] = useState(false);
+  
+    useEffect(() => {
+      if ("NDEFReader" in window) {
+        setNfcSupported(true);
+        console.log("NFC supporté");
+      } else {
+        setNfcSupported(false);
+        enqueueSnackbar("NFC n'est pas supporté sur cet appareil ou navigateur.", { variant: 'warning' });
+        console.log("NFC non supporté");
+      }
+    }, [enqueueSnackbar]);
+  
+    const handleClose = () => {
+      setOpen(false);
+    };
+  
+    const readNfcTag = async () => {
+      if (nfcSupported) {
+        try {
+          const reader = new NDEFReader();
+          await reader.scan();
+          console.log("En attente de la lecture du tag NFC...");
+  
+          reader.onreading = event => {
+            console.log("Tag NFC détecté !");
+            const serialNumber = event.serialNumber;
+            if (serialNumber) {
+              console.log("Numéro de série du tag NFC:", serialNumber);
+              setFieldValue('RFID', serialNumber);
+              setMessage(`RFID scanné avec succès: ${serialNumber}`);
+              setOpen(true);
+              enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
+              if (navigator.vibrate) {
+                navigator.vibrate(200); // Vibration de 200 ms
+              }
+            } else {
+              console.error("Aucune donnée scannée.");
+              enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
+            }
+          };
+        } catch (error) {
+          console.error(`Erreur de lecture du tag NFC: ${error.message}`);
+          setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
+          setOpen(true);
+          enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
+        }
+      }
+    };
+  
+    return (
+      <>
+        <Button onClick={readNfcTag} variant="contained" color="primary">
+          Scanner RFID
+        </Button>
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
+      </>
+    );
   };
 
   return (
@@ -102,11 +159,11 @@ const ModifyEquipment = () => {
             </Box>
           )}
 
-<Formik
-    initialValues={equipmentData} // Ces données devraient provenir de l'état initialisé avec les données de l'équipement.
-    validationSchema={checkoutSchema}
-    onSubmit={handleModifyEquipment}
->
+          <Formik
+            initialValues={equipmentData}
+            validationSchema={checkoutSchema}
+            onSubmit={handleModifyEquipment}
+          >
             {({
               values,
               errors,
@@ -114,6 +171,7 @@ const ModifyEquipment = () => {
               handleBlur,
               handleChange,
               handleSubmit,
+              setFieldValue,
             }) => (
               <form onSubmit={handleSubmit} method="POST">
                 <TextField
@@ -155,6 +213,18 @@ const ModifyEquipment = () => {
                   helperText={touched.AdresseIp && errors.AdresseIp}
                   sx={{ gridColumn: "span 4" }}
                 />
+                <RfidScanner setFieldValue={setFieldValue} />
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="RFID"
+                  value={values.RFID}
+                  name="RFID"
+                  error={!!errors.RFID}
+                  helperText={errors.RFID}
+                  sx={{ gridColumn: "span 4" }}
+                />
                 <TextField
                   fullWidth
                   variant="filled"
@@ -181,6 +251,23 @@ const ModifyEquipment = () => {
                   helperText={touched.Etat && errors.Etat}
                   sx={{ gridColumn: "span 4" }}
                 />
+                <Autocomplete
+                  fullWidth
+                  options={equipments}
+                  getOptionLabel={(option) => option.Nom}
+                  onChange={(event, value) => setFieldValue('ConnecteA', value ? value._id : '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Sélectionner équipement ConnecteA"
+                      variant="filled"
+                      name="ConnecteA"
+                      error={!!touched.ConnecteA && !!errors.ConnecteA}
+                      helperText={touched.ConnecteA && errors.ConnecteA}
+                      onBlur={handleBlur}
+                    />
+                  )}
+                />
                 <Button type="submit" variant="contained" color="primary">
                   Modifier l'équipement
                 </Button>
@@ -193,5 +280,4 @@ const ModifyEquipment = () => {
   );
 };
 
-// Exportez le composant de l'interface de modification
 export default ModifyEquipment;

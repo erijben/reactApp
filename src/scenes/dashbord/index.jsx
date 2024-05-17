@@ -151,7 +151,7 @@ socket.on('newAlert', (alert) => {
   const fetchBarChartData = async () => {
     try {
       if (selectedEquipments.length > 0 && startDate && endDate) {
-        const response = await axios.post('http://localhost:3001/api/barChartData', {
+        const response = await axios.post('https://nodeappectt.onrender.com/api/barChartData', {
           startDate: startDate,
           endDate: endDate,
           equipmentIds: selectedEquipments
@@ -220,7 +220,7 @@ socket.on('newAlert', (alert) => {
   const fetchEquipments = async () => {
     try {
       
-      const response = await axios.get('http://localhost:3001/equip');
+      const response = await axios.get('https://nodeappectt.onrender.com/equip');
       setEquipments(response.data);
     } catch (error) {
       console.error('Error fetching equipments:', error);
@@ -234,7 +234,7 @@ socket.on('newAlert', (alert) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/interventions");
+        const response = await axios.get("https://nodeappectt.onrender.com/api/interventions");
         setInterventions(response.data);
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);
@@ -246,7 +246,7 @@ socket.on('newAlert', (alert) => {
 
 
   useEffect(() => {
-    const socket = io('http://localhost:3001');
+    const socket = io('https://nodeappectt.onrender.com');
 
     socket.on('newAlert', (newAlert) => {
       console.log('Nouvelle alerte reçue:', newAlert);
@@ -316,7 +316,7 @@ socket.on('newAlert', (alert) => {
   const fetchPingCount = async () => {
     try {
       if (selectedEquipments.length > 0 && startDate && endDate) {
-        const response = await axios.post('http://localhost:3001/api/pingResults/equip/count', {
+        const response = await axios.post('https://nodeappectt.onrender.com/api/pingResults/equip/count', {
           startDate: startDate,
           endDate: endDate,
           equipmentIds: selectedEquipments
@@ -342,7 +342,7 @@ useEffect(() => {
 
 const fetchInterventionCount = async () => {
   try {
-    const response = await axios.post('http://localhost:3001/api/interventions/equip/count', {
+    const response = await axios.post('https://nodeappectt.onrender.com/api/interventions/equip/count', {
       startDate: startDate,
       endDate: endDate,
       equipmentIds: selectedEquipments
@@ -366,7 +366,7 @@ useEffect(() => {
 const fetchData = async () => {
 try {
   if (selectedEquipments.length > 0 && startDate && endDate) {
-    const response = await axios.post("http://localhost:3001/api/erij", {
+    const response = await axios.post("https://nodeappectt.onrender.com/api/erij", {
       startDate: startDate,
       endDate: endDate,
       equipmentIds: selectedEquipments
@@ -391,7 +391,7 @@ useEffect(() => {
 const fetchInterventions = async () => {
   try {
     if (selectedEquipments.length > 0 && startDate && endDate) {
-      const response = await axios.post('http://localhost:3001/api/interventions/filter', {
+      const response = await axios.post('https://nodeappectt.onrender.com/api/interventions/filter', {
         startDate: startDate,
         endDate: endDate,
         equipmentIds: selectedEquipments
@@ -410,7 +410,7 @@ const fetchInterventions = async () => {
 const fetchResolvedAlertsCount = async () => {
   if (selectedEquipments.length > 0 && startDate && endDate) {
     try {
-      const response = await axios.post('http://localhost:3001/api/alerts/resolved/count', {
+      const response = await axios.post('https://nodeappectt.onrender.com/api/alerts/resolved/count', {
         startDate: startDate,
         endDate: endDate,
         equipmentIds: selectedEquipments
@@ -430,7 +430,7 @@ useEffect(() => {
 const generateAndDownloadReport = async (format) => {
   setIsGenerating(true);
   try {
-    const response = await axios.post('http://localhost:3001/api/reports/generate', {
+    const response = await axios.post('https://nodeappectt.onrender.com/api/reports/generate', {
       startDate, endDate, equipmentIds: selectedEquipments,
     });
     setIsGenerating(false);
@@ -692,7 +692,7 @@ return (
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                Courbe  TTL
+               LineChart
               </Typography>
             </Box>
           </Box>
@@ -758,9 +758,10 @@ return (
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
         >
-          <Typography
+         <Typography
             variant="h5"
-            fontWeight="600"
+            fontWeight="bold"
+            color={colors.greenAccent[500]}
             sx={{ padding: "30px 30px 0 30px" }}
           >
             PieChart
@@ -771,7 +772,6 @@ return (
   equipmentIds={selectedEquipments}
   startDate={startDate}
   endDate={endDate}
-
 />
           </Box>
         </Box>
@@ -780,11 +780,13 @@ return (
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
         >
-          <Typography
+           <Typography
             variant="h5"
-            fontWeight="600"
+            fontWeight="bold"
+            color={colors.greenAccent[500]}
             sx={{ padding: "30px 30px 0 30px" }}
           >
+            BarChart
           </Typography>
           <Box height="250px" mt="-20px">
           {selectedEquipments.length > 0 ? (
@@ -796,7 +798,7 @@ return (
       />
       
     ) : (
-      <Typography variant="body2">Aucun équipement sélectionné pour afficher le graphique.</Typography>
+      <Typography variant="body2"></Typography>
     )}
     </Box>
   </Box>

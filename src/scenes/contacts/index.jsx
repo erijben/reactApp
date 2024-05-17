@@ -1,59 +1,87 @@
-import React, { useState, useEffect } from 'react'; // Ajout de useEffect ici
-import { Box, Button, TextField } from "@mui/material";
+import React, { useState, useEffect } from 'react'; 
+import { Box, Button, TextField, Snackbar, Autocomplete } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { Autocomplete } from '@mui/material';
-
 
 // Define the RfidScanner component outside of the Contacts component
-const RfidScanner = ({ setRfid }) => {
+const RfidScanner = ({ setFieldValue }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [nfcSupported, setNfcSupported] = useState(false);
+
+  useEffect(() => {
+    if ("NDEFReader" in window) {
+      setNfcSupported(true);
+      console.log("NFC supporté");
+    } else {
+      setNfcSupported(false);
+      enqueueSnackbar("NFC n'est pas supporté sur cet appareil ou navigateur.", { variant: 'warning' });
+      console.log("NFC non supporté");
+    }
+  }, [enqueueSnackbar]);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const readNfcTag = async () => {
-      if ("NDEFReader" in window) {
-          try {
-              const reader = new NDEFReader();
-              await reader.scan();
-              reader.onreading = event => {
-                  const decoder = new TextDecoder();
-                  for (const record of event.message.records) {
-                      setRfid(decoder.decode(record.data));
-                  }
-              };
-              
-          } catch (error) {
-              console.error("Error reading NFC tag:", error);
-              enqueueSnackbar("Error reading NFC tag: " + error.message, { variant: 'error' });
+    if (nfcSupported) {
+      try {
+        const reader = new NDEFReader();
+        await reader.scan();
+        console.log("En attente de la lecture du tag NFC...");
+
+        reader.onreading = event => {
+          console.log("Tag NFC détecté !");
+          const serialNumber = event.serialNumber;
+          if (serialNumber) {
+            console.log("Numéro de série du tag NFC:", serialNumber);
+            setFieldValue('RFID', serialNumber);
+            setMessage(`RFID scanné avec succès: ${serialNumber}`);
+            setOpen(true);
+            enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
+            if (navigator.vibrate) {
+              navigator.vibrate(200); // Vibration de 200 ms
+            }
+          } else {
+            console.error("Aucune donnée scannée.");
+            enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
           }
-      } else {
-          enqueueSnackbar("NFC is not supported on this device or browser.", { variant: 'warning' });
+        };
+      } catch (error) {
+        console.error(`Erreur de lecture du tag NFC: ${error.message}`);
+        setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
+        setOpen(true);
+        enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
       }
+    }
   };
 
   return (
+    <>
       <Button onClick={readNfcTag} variant="contained" color="primary">
-          Scan RFID
+        Scanner RFID
       </Button>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
+    </>
   );
 };
 
 const Contacts = () => {
-  const [rfid, setRfid] = useState('');
   const [equipments, setEquipments] = useState([]);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
 
   const handleAddEquipment = async (values) => {
     try {
-      const connecteAIds = values.ConnecteA.split(',').map(id => id.trim()); // Créer un tableau à partir de la chaîne
       const newEquipment = {
         Nom: values.Nom,
         Type: values.Type,
@@ -61,14 +89,12 @@ const Contacts = () => {
         AdresseIp: values.AdresseIp,
         Emplacement: values.Emplacement,
         Etat: values.Etat,
-        ConnecteA:connecteAIds,
-        Pays:values.Pays,
-     
+        ConnecteA: values.ConnecteA, // Utilisation de la valeur d'ID ici
       };
 
       console.log("Nouvel équipement :", newEquipment);
 
-      const response = await axios.post('http://localhost:3001/equip/add', newEquipment);
+      const response = await axios.post('https://nodeappectt.onrender.com/equip/add', newEquipment);
 
       console.log("Réponse du serveur :", response.data);
 
@@ -96,7 +122,7 @@ const Contacts = () => {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const { data } = await axios.get('http://localhost:3001/equip');
+        const { data } = await axios.get('https://nodeappectt.onrender.com/equip');
         setEquipments(data);
       } catch (error) {
         console.error('Erreur lors du chargement des équipements:', error);
@@ -104,6 +130,7 @@ const Contacts = () => {
     };
     fetchEquipments();
   }, []);
+
   return (
     <Box m="20px">
       <Header title="Ajouter un équipement" subtitle="Voir la liste des équipements" />
@@ -130,9 +157,8 @@ const Contacts = () => {
           handleBlur,
           handleChange,
           handleSubmit,
-        
+          setFieldValue,
         }) => (
-          
           <form onSubmit={handleSubmit} method="POST">
             <Box
               display="grid"
@@ -181,13 +207,13 @@ const Contacts = () => {
                 helperText={touched.AdresseIp && errors.AdresseIp}
                 sx={{ gridColumn: "span 4" }}
               />
-                <RfidScanner setRfid={setRfid} />
+              <RfidScanner setFieldValue={setFieldValue} />
               <TextField
                 fullWidth
                 variant="filled"
                 type="text"
                 label="RFID"
-                value={rfid}
+                value={values.RFID}
                 name="RFID"
                 error={!!errors.RFID}
                 helperText={errors.RFID}
@@ -219,38 +245,24 @@ const Contacts = () => {
                 helperText={touched.Etat && errors.Etat}
                 sx={{ gridColumn: "span 4" }}
               />
-         
               <Autocomplete
-  fullWidth
-  freeSolo
-  disableClearable
-  options={equipments.map(equipment => equipment.Nom)}
-  renderInput={(params) => (
-    <TextField
-      {...params}
-      label="Sélectionner équipement ConnectA"
-      variant="outlined"
-      fullWidth
-      onChange={(event) => setSearch(event.target.value)}
-      onBlur={handleBlur}
-      error={!!touched.ConnecteA && !!errors.ConnecteA}
-      helperText={touched.ConnecteA && errors.ConnecteA}
-    />
-  )}
-/>
-                <TextField
                 fullWidth
-                variant="filled"
-                type="text"
-                label="Pays"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.Pays}
-                name="Pays"
-                error={!!touched.Pays && !!errors.Pays}
-                helperText={touched.Pays && errors.Pays}
-                sx={{ gridColumn: "span 4" }}
+                options={equipments}
+                getOptionLabel={(option) => option.Nom}
+                onChange={(event, value) => setFieldValue('ConnecteA', value ? value._id : '')}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Sélectionner équipement ConnecteA"
+                    variant="filled"
+                    name="ConnecteA"
+                    error={!!touched.ConnecteA && !!errors.ConnecteA}
+                    helperText={touched.ConnecteA && errors.ConnecteA}
+                    onBlur={handleBlur}
+                  />
+                )}
               />
+              
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
@@ -271,22 +283,22 @@ const checkoutSchema = yup.object().shape({
   Nom: yup.string().required("required"),
   Type: yup.string().required("required"),
   AdresseIp: yup.string().required("required"),
-  RFID: yup.string().required("required"), // Assurez-vous que le champ RFID est requis
+  RFID: yup.string().required("required"),
   Emplacement: yup.string().required("required"),
   Etat: yup.string().required("required"),
   ConnecteA: yup.string().required("L'ID de l'équipement connecté est requis"),
-  Pays: yup.string().required("required") // Ce champ n'est pas obligatoire
+ 
 });
 
 const initialValues = {
   Nom: "",
   Type: "",
   AdresseIp: "",
-  RFID:"",
+  RFID: "",
   Emplacement: "",
   Etat: "",
-  ConnecteA:"",
-  Pays:"",
+  ConnecteA: "",
+ 
 };
 
 export default Contacts;
