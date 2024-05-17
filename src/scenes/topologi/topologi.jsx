@@ -3,6 +3,8 @@ import { Box, Button, Typography, Snackbar } from '@mui/material';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
+import { useNavigate } from 'react-router-dom';
+
 
 const Topologi = () => {
   const [scannedEquipments, setScannedEquipments] = useState([]);
@@ -10,7 +12,9 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [alertMessage, setAlertMessage] = useState('');
+  const navigate = useNavigate();
 
+  
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
