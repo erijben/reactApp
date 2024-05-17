@@ -1,22 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import './LoginForm.css';
-import { FaUserLock } from "react-icons/fa";
-import { FaUnlockAlt } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () =>
 {
     const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch('https://nodeappectt.onrender.com/auth/login', {
+      const response = await fetch('https://nodeapp-0ome.onrender.com/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,10 +23,9 @@ const LoginForm = () =>
       if (response.status === 200) {
         // Stockez le token dans localStorage ou un contexte de gestion d'état global si vous utilisez Redux ou Context API
         localStorage.setItem('token', data.accessToken);
-
-          navigate('/dashboard'); 
-  
-           } else if (response.status === 401) {
+       
+        navigate('/dashboard');
+      } else if (response.status === 401) {
         // Code d'état HTTP 401 indique une authentification non réussie (mauvais identifiant ou mot de passe)
         alert('Login failed: Incorrect email or password.');
       } else {
@@ -51,19 +45,19 @@ const LoginForm = () =>
     
     return (
         <div className='wrapper'> 
-        <form onSubmit={handleSubmit}>
+        <form  onSubmit={handleSubmit}>
             <h1>Login</h1>
             <div className="input-box">
             <input type="text" placeholder='email' required  
             value={email} onChange={(e) => setEmail(e.target.value)} 
                        />
-            <FaUserLock  className='icon' />
+            
             </div>
             <div className="input-box">
             <input type="password" placeholder='Password' required  value={password} onChange={(e) => setPassword(e.target.value)}
              
               />
-            <FaUnlockAlt className='icon'/>
+            
             </div>
             <div className="remember-forgot">
                 <label ><input type="checkbox" />Remember me</label>
