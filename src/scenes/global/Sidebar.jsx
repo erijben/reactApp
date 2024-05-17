@@ -166,6 +166,13 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+               <Item
+              title="Topologi "
+              to="/topologi"
+              icon={< HubIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
             
             
             <Item
