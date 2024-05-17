@@ -13,7 +13,6 @@ import Bar from "./scenes/bar";
 import Pie from "./scenes/pie";
 import Line from "./scenes/line";
 import Ping from "./scenes/ping";
-// ... (Other imports)
 import ModifyEquipment from "./scenes/ModifyEquipment";
 import ModifyConfig from "./scenes/ModifyConfig";
 import ModifyUser from "./scenes/ModifyUser";
@@ -28,8 +27,8 @@ import { useLocation } from "react-router-dom";
 import User from "./scenes/user";
 import ResetPasswordForm from "./scenes/forgot";
 import ForgotPasswordForm from "./scenes/password";
- import TTLStatsPieChart  from "./components/Pie";
-
+import TTLStatsPieChart  from "./components/Pie";
+import Topologi from "./scenes/topologi";
 
 
 function App() {
@@ -51,9 +50,9 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
 
                 <Routes>
                 <Route path="/" element={<LoginForm />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/team" element={<Team />} />
-            <Route path ="/dashboard" element ={<Dashboard/>}/>
+                <Route path="/dashboard" element={<Dashboard />} />
+               <Route path="/team" element={<Team />} />
+               <Route path ="/dashboard" element ={<Dashboard/>}/>
                 <Route path ="/team" element ={<Team/>}/>
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/invoices" element={<Invoices />} />
@@ -71,7 +70,6 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
                 <Route path="/liste" element={<Listes />} />
                 <Route path="/listes" element={<Listes />} />
                 <Route path="/listes/:id" element={<InterventionDetails />} />
-             
                 <Route path="/equip/:id" element={<Listes />} />
                 <Route path="/alert/:equipmentId" element={<Alert />} />
                 <Route path="/invoices/:equipmentId" element={<Invoices/>} />
@@ -80,11 +78,9 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
                 <Route path="/pie/:equipmentId" element={<Pie />} />
                 <Route path="/user" element={<User/>} />
                 <Route path="/forgot" element={ <ResetPasswordForm/>} />
+                <Route path="/topologi" elment={<topologi/>}/>
                 <Route path="/password" element={ <ForgotPasswordForm/>} />
-           
                 </Routes>
-           
-           
            </main>
  
          </div>
