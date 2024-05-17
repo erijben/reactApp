@@ -89,7 +89,7 @@ const Contacts = () => {
         AdresseIp: values.AdresseIp,
         Emplacement: values.Emplacement,
         Etat: values.Etat,
-        ConnecteA: values.ConnecteA, // Utilisation de la valeur d'ID ici
+     
       };
 
       console.log("Nouvel équipement :", newEquipment);
@@ -245,23 +245,8 @@ const Contacts = () => {
                 helperText={touched.Etat && errors.Etat}
                 sx={{ gridColumn: "span 4" }}
               />
-              <Autocomplete
-                fullWidth
-                options={equipments}
-                getOptionLabel={(option) => option.Nom}
-                onChange={(event, value) => setFieldValue('ConnecteA', value ? value._id : '')}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Sélectionner équipement ConnecteA"
-                    variant="filled"
-                    name="ConnecteA"
-                    error={!!touched.ConnecteA && !!errors.ConnecteA}
-                    helperText={touched.ConnecteA && errors.ConnecteA}
-                    onBlur={handleBlur}
-                  />
-                )}
-              />
+             
+            
               
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
@@ -286,7 +271,7 @@ const checkoutSchema = yup.object().shape({
   RFID: yup.string().required("required"),
   Emplacement: yup.string().required("required"),
   Etat: yup.string().required("required"),
-  ConnecteA: yup.string().required("L'ID de l'équipement connecté est requis"),
+ 
  
 });
 
@@ -297,7 +282,7 @@ const initialValues = {
   RFID: "",
   Emplacement: "",
   Etat: "",
-  ConnecteA: "",
+ 
  
 };
 
