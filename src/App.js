@@ -9,13 +9,10 @@ import Contacts from "./scenes/contacts";
 import Invoices from "./scenes/invoices";
 import Form from "./scenes/form";
 import Calendar from "./scenes/calendar";
-
 import Bar from "./scenes/bar";
 import Pie from "./scenes/pie";
 import Line from "./scenes/line";
-
 import Ping from "./scenes/ping";
-
 // ... (Other imports)
 import ModifyEquipment from "./scenes/ModifyEquipment";
 import ModifyConfig from "./scenes/ModifyConfig";
@@ -23,8 +20,6 @@ import ModifyUser from "./scenes/ModifyUser";
 import Intervention from "./scenes/intervention";
 import Listes from "./scenes/liste";
 import Config from "./scenes/config";
-
-
 import InterventionDetails from "./scenes/InterventionDetails"; // Importez le nouveau composant
 import { SnackbarProvider } from 'notistack';
 import Alert from "./scenes/alert"
@@ -54,33 +49,29 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
   <main className={isForgotPasswordPage ? "content-full" : "content"}>
     {!isLoginPage && !isForgotPasswordPage && <Topbar/>}
 
-            <Routes>
-            <Route path="/" element={ <LoginForm/>} />
+                <Routes>
+                <Route path="/" element={<LoginForm />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/team" element={<Team />} />
             <Route path ="/dashboard" element ={<Dashboard/>}/>
                 <Route path ="/team" element ={<Team/>}/>
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/form" element={<Form />} />
                 <Route path="/calendar" element={<Calendar />} />
-              
                 <Route path="/bar" element={<Bar />} />
                 <Route path="/pie" element={<Pie />} />
                 <Route path="/line" element={<Line />} />
-                
                 <Route path="/ping" element={<Ping />} />
                 <Route path="/ping/:equipmentId" element={<Ping />} />
                 <Route path="/modify/:id" element={<ModifyEquipment />} />
                 <Route path="/modify-config/:id" element={<ModifyConfig />} />
                 <Route path="//modify-user/:id" element={<ModifyUser />} />
-                
                 <Route path="/intervention" element={<Intervention />} />
                 <Route path="/liste" element={<Listes />} />
                 <Route path="/listes" element={<Listes />} />
-              
-                <Route path="/pie" element={<TTLStatsPieChart />} />
-
                 <Route path="/listes/:id" element={<InterventionDetails />} />
-               
+             
                 <Route path="/equip/:id" element={<Listes />} />
                 <Route path="/alert/:equipmentId" element={<Alert />} />
                 <Route path="/invoices/:equipmentId" element={<Invoices/>} />
@@ -90,19 +81,19 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
                 <Route path="/user" element={<User/>} />
                 <Route path="/forgot" element={ <ResetPasswordForm/>} />
                 <Route path="/password" element={ <ForgotPasswordForm/>} />
-                
+           
                 </Routes>
            
            
-          </main>
-
-        </div>
-        </SnackbarProvider>
-
-      </ThemeProvider>
-    </ColorModeContext.Provider>
-  );
-}
-
-
-export default App;
+           </main>
+ 
+         </div>
+         </SnackbarProvider>
+ 
+       </ThemeProvider>
+     </ColorModeContext.Provider>
+   );
+ }
+ 
+ 
+ export default App;

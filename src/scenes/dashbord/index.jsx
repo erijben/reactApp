@@ -133,7 +133,7 @@ const Dashboard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportSummary, setReportSummary] = useState('');
   const [exportFile, setExportFile] = useState(null);
-  const socket = io('*'); // Assurez-vous que l'URL correspond à votre serveur
+  const socket = io('http://localhost:3001'); // Assurez-vous que l'URL correspond à votre serveur
   const [isLoading, setIsLoading] = useState(false);
 
 
@@ -246,7 +246,7 @@ socket.on('newAlert', (alert) => {
 
 
   useEffect(() => {
-    const socket = io('https://nodeappectt.onrender.com');
+    const socket = io('http://localhost:3001');
 
     socket.on('newAlert', (newAlert) => {
       console.log('Nouvelle alerte reçue:', newAlert);

@@ -50,7 +50,7 @@ const Team = () => {
   }, []);
 
   useEffect(() => {
-    const socket = io('https://nodeappectt.onrender.com');
+    const socket = io('http://localhost:3001');
     socket.on('newAlert', (newAlert) => {
       console.log('New alert received:', newAlert);
       const { equipmentId, status, message } = newAlert;

@@ -3,16 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthContextProvider } from './authContexte/AuthContext'; // Make sure the path is correct
+import { SnackbarProvider } from 'notistack';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthContextProvider>
+      <SnackbarProvider maxSnack={3} anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'center',
+      }}>
         <App />
-      </AuthContextProvider>
+      </SnackbarProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
