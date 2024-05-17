@@ -21,7 +21,7 @@ const Config = () => {
   useEffect(() => {
     const fetchConfigs = async () => {
       try {
-        const response = await axios.get("https://nodeappectt.onrender.com/config");
+        const response = await axios.get("https://nodeapp-ectt.onrender.com/config");
         const transformedData = response.data.map((row) => ({
             ...row,
             id: row._id,
@@ -44,7 +44,7 @@ const Config = () => {
 
   const deleteConfig = async (id) => {
     try {
-      await axios.delete(`https://nodeappectt.onrender.com/config/configs/${id}`);
+      await axios.delete(`https://nodeapp-ectt.onrender.com/config/configs/${id}`);
       setConfigs(configs.filter((config) => config.id !== id));
       console.log("Configuration deleted successfully");
     } catch (error) {

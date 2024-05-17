@@ -23,7 +23,7 @@ const User = () => {
     useEffect(() => {
       const fetchUsers = async () => {
         try {
-          const response = await axios.get('https://nodeappectt.onrender.com/user/users');
+          const response = await axios.get('https://nodeapp-ectt.onrender.com/user/users');
           const usersWithId = response.data.map(user => ({ ...user, id: user._id }));
           setUsers(usersWithId);
         } catch (error) {
@@ -44,7 +44,7 @@ const User = () => {
 
     const deleteuser = async (id) => {
       try {
-        await axios.delete(`https://nodeappectt.onrender.com/user/users/${id}`);
+        await axios.delete(`https://nodeapp-ectt.onrender.com/user/users/${id}`);
         setUsers(users.filter((user) => user.id !== id));
         console.log("useru deleted successfully");
       } catch (error) {

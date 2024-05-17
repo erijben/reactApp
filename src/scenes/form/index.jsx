@@ -22,7 +22,7 @@ const Form = () => {
         role: values.role,
       };
 
-      const response = await axios.post('https://nodeappectt.onrender.com/user/users', newUser);
+      const response = await axios.post('https://nodeapp-ectt.onrender.com/user/users', newUser);
       console.log(response.data);
       setAlertMessage("Utilisateur ajouté avec succès !");
       setAlertType("success"); // Définir le type d'alerte comme succès

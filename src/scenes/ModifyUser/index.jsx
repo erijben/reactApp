@@ -15,7 +15,7 @@ const ModifyUser = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    axios.get(`https://nodeappectt.onrender.com
+    axios.get(`https://nodeapp-ectt.onrender.com
 
 /user/users/${id}`)
       .then(response => {
@@ -36,7 +36,7 @@ const ModifyUser = () => {
   });
 
   const handleSubmit = (values, actions) => {
-    axios.put(`https://nodeappectt.onrender.com
+    axios.put(`https://nodeapp-ectt.onrender.com
 
 /user/users/${id}`, values)
       .then(response => {

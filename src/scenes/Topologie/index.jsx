@@ -9,7 +9,7 @@ const Topologie = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
    // Ajoutez un état pour stocker les données des équipements avec leurs états
    const [equipments, setEquipments] = useState([]);
-  const socket = io('https://nodeappectt.onrender.com'); // Assurez-vous que l'URL correspond à votre serveur
+  const socket = io('https://nodeapp-ectt.onrender.com'); // Assurez-vous que l'URL correspond à votre serveur
 
   const selectIconBasedOnType = (type) => {
     switch (type) {
@@ -28,7 +28,7 @@ const Topologie = () => {
   useEffect(() => {
     const fetchTopologie = async () => {
       try {
-        const response = await axios.get('https://nodeappectt.onrender.com/api/topologie');
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/api/topologie');
         const visData = transformDataToVisNetwork(response.data);
         setGraph(visData);
         setEquipments(response.data);

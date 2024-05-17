@@ -43,7 +43,7 @@ const Listes = () => {
 
             // Rechercher l'équipement dans la base de données en utilisant le RFID scanné
             try {
-              const response = await axios.get(`https://nodeappectt.onrender.com/equip/find/${serialNumber}`);
+              const response = await axios.get(`https://nodeapp-ectt.onrender.com/equip/find/${serialNumber}`);
               if (response.data.success) {
                 const equipment = response.data.equipment;
                 navigate('/intervention', { state: { equipmentName: equipment.Nom } });
@@ -69,13 +69,13 @@ const Listes = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("https://nodeappectt.onrender.com/api/interventions");
+        const response = await axios.get("https://nodeapp-ectt.onrender.com/api/interventions");
         console.log(response.data);
         setInterventions(response.data);
 
         const equippedInterventions = await Promise.all(response.data.map(async (intervention) => {
           try {
-            const equipResponse = await axios.get(`https://nodeappectt.onrender.com/api/interventions/equip/${intervention.equipment}`);
+            const equipResponse = await axios.get(`https://nodeapp-ectt.onrender.com/api/interventions/equip/${intervention.equipment}`);
             if (equipResponse.data && equipResponse.data.Nom) {
               intervention.equipmentName = equipResponse.data.Nom;
             } else {

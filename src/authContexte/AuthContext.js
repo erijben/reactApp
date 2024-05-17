@@ -14,7 +14,7 @@ export const AuthContextProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
         console.log("Sending login request...");
-        const data  = await axios.post("https://nodeappectt.onrender.com/auth/login", { email, password });
+        const data  = await axios.post("https://nodeapp-ectt.onrender.com/auth/login", { email, password });
         console.log("API response data:", data);
 
         if (data.accessToken) {

@@ -94,7 +94,7 @@ const Contacts = () => {
 
       console.log("Nouvel équipement :", newEquipment);
 
-      const response = await axios.post('https://nodeappectt.onrender.com/equip/add', newEquipment);
+      const response = await axios.post('https://nodeapp-ectt.onrender.com/equip/add', newEquipment);
 
       console.log("Réponse du serveur :", response.data);
 
@@ -122,7 +122,7 @@ const Contacts = () => {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const { data } = await axios.get('https://nodeappectt.onrender.com/equip');
+        const { data } = await axios.get('https://nodeapp-ectt.onrender.com/equip');
         setEquipments(data);
       } catch (error) {
         console.error('Erreur lors du chargement des équipements:', error);
