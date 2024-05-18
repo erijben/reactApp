@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Snackbar } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
@@ -10,8 +10,6 @@ const Topologi = () => {
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
-  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -23,18 +21,22 @@ const Topologi = () => {
       }
     };
     fetchEquipments();
-
-    const fetchScannedEquipments = async () => {
-      try {
-        const response = await axios.get('https://nodeapp-ectt.onrender.com/api/scannedEquipments');
-        setScannedEquipments(response.data);
-        updateGraph(response.data);
-      } catch (error) {
-        console.error('Error fetching scanned equipments:', error);
-      }
-    };
-    fetchScannedEquipments();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(fetchScannedEquipments, 5000); // Fetch every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchScannedEquipments = async () => {
+    try {
+      const response = await axios.get('https://nodeapp-0ome.onrender.com/scannedEquipments');
+      setScannedEquipments(response.data);
+      updateGraph(response.data);
+    } catch (error) {
+      console.error('Error fetching scanned equipments:', error);
+    }
+  };
 
   const handleRFIDScan = async () => {
     try {
@@ -42,45 +44,27 @@ const Topologi = () => {
       await ndef.scan();
       ndef.addEventListener('reading', async event => {
         const rfid = event.serialNumber;
-        console.log('RFID scanned:', rfid);
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
-          let newScannedEquipments = [...scannedEquipments];
-          if (!newScannedEquipments.find(equip => equip._id === scannedEquipment._id)) {
-            newScannedEquipments = [...newScannedEquipments, scannedEquipment];
+          if (scannedEquipments.length > 0) {
+            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
+            lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
+            try {
+              await axios.put(`https://nodeapp-0ome.onrender.com/equip/equip/${lastScannedEquipment._id}`, lastScannedEquipment);
+            } catch (updateError) {
+              console.error('Error updating equipment:', updateError);
+            }
           }
+          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/api/scannedEquipments', { equipments: newScannedEquipments });
+          await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
-          setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
         }
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
-    }
-  };
-
-  const handleCreateConnection = async () => {
-    if (selectedEquipmentId) {
-      const targetEquipmentId = prompt("Entrez l'ID de l'équipement à connecter:");
-      if (targetEquipmentId) {
-        try {
-          const response = await axios.post('https://nodeapp-ectt.onrender.com/connections', {
-            from: selectedEquipmentId,
-            to: targetEquipmentId
-          });
-          setAlertMessage(`Connexion créée entre ${selectedEquipmentId} et ${targetEquipmentId}`);
-          setScannedEquipments(response.data.equipments);
-          updateGraph(response.data.equipments);
-        } catch (error) {
-          console.error('Error creating connection:', error);
-          setAlertMessage('Erreur lors de la création de la connexion');
-        }
-      }
-    } else {
-      setAlertMessage('Sélectionnez d\'abord un équipement');
     }
   };
 
@@ -93,16 +77,13 @@ const Topologi = () => {
       title: `Type: ${equip.Type}\nAdresse IP: ${equip.AdresseIp}\nRFID: ${equip.RFID}\nEtat: ${equip.Etat}`,
       color: getColorByState(equip.Etat)
     }));
-    const edges = [];
-    equipments.forEach(equip => {
-      equip.ConnecteA.forEach(connectedId => {
-        edges.push({
-          from: equip._id,
-          to: connectedId,
-          arrows: 'to'
-        });
-      });
-    });
+
+    const edges = equipments.slice(1).map((equip, index) => ({
+      from: equipments[index]._id,
+      to: equip._id,
+      arrows: 'to'
+    }));
+
     setGraph({ nodes, edges });
   };
 
@@ -151,25 +132,8 @@ const Topologi = () => {
         to: { enabled: true, scaleFactor: 1 }
       }
     },
-    height: "500px",
-    interaction: {
-      selectable: true,
-      selectConnectedEdges: false,
-    },
-    manipulation: {
-      enabled: true,
-      initiallyActive: true,
-    },
+    height: "500px"
   };
-
-  const events = {
-    selectNode: (event) => {
-      const { nodes } = event;
-      setSelectedEquipmentId(nodes[0]);
-      setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
-    }
-  };
-
 
   return (
     <Box m="20px">
@@ -177,25 +141,17 @@ const Topologi = () => {
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      <Button variant="contained" color="secondary" onClick={handleCreateConnection} style={{ marginLeft: 10 }}>
-        Créer une connexion
-      </Button>
-      <Box mt="20px">
-        <Typography variant="h5">Équipements scannés :</Typography>
-        <Graph
-          key={Date.now()}
-          graph={graph}
-          options={options}
-          events={events}
-          style={{ height: "500px" }}
-        />
-      </Box>
-      <Snackbar
-        open={!!alertMessage}
-        autoHideDuration={6000}
-        onClose={() => setAlertMessage('')}
-        message={alertMessage}
-      />
+      {scannedEquipments.length > 0 && (
+        <Box mt="20px">
+          <Typography variant="h5">Équipements scannés :</Typography>
+          <Graph
+            key={Date.now()}
+            graph={graph}
+            options={options}
+            style={{ height: "500px" }}
+          />
+        </Box>
+      )}
       <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
