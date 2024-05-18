@@ -23,10 +23,7 @@ const Topologi = () => {
     fetchEquipments();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(fetchScannedEquipments, 5000); // Fetch every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
+ 
 
   const fetchScannedEquipments = async () => {
     try {
