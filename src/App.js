@@ -78,7 +78,7 @@ const isForgotPasswordPage = location.pathname === '/forgot' || location.pathnam
                 <Route path="/pie/:equipmentId" element={<Pie />} />
                 <Route path="/user" element={<User/>} />
                 <Route path="/forgot" element={ <ResetPasswordForm/>} />
-                <Route path="/topologi" elment={<Topologi/>}/>
+                <Route path="/Topologi" elment={<Topologi/>}/>
                 <Route path="/password" element={ <ForgotPasswordForm/>} />
                 </Routes>
            </main>
