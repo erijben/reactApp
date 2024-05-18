@@ -23,7 +23,10 @@ const Topologi = () => {
     fetchEquipments();
   }, []);
 
- 
+  useEffect(() => {
+    const interval = setInterval(fetchScannedEquipments, 5000); // Fetch every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchScannedEquipments = async () => {
     try {
@@ -45,11 +48,12 @@ const Topologi = () => {
         if (scannedEquipment) {
           if (scannedEquipments.length > 0) {
             const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-            await axios.post('https://nodeapp-ectt.onrender.com/equip/updateConnection', {
-              currentEquipId: lastScannedEquipment._id,
-              previousEquipId: scannedEquipment._id
-            });
             lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
+            try {
+              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, lastScannedEquipment);
+            } catch (updateError) {
+              console.error('Error updating equipment:', updateError);
+            }
           }
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
@@ -74,19 +78,17 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.flatMap((equip, index) =>
-      equip.ConnecteA.map(connectedId => ({
-        from: equip._id,
-        to: connectedId,
-        arrows: 'to'
-      }))
-    );
+    const edges = equipments.slice(1).map((equip, index) => ({
+      from: equipments[index]._id,
+      to: equip._id,
+      arrows: 'to'
+    }));
 
     setGraph({ nodes, edges });
   };
 
   const selectIconBasedOnType = (type) => {
-    switch (type.toLowerCase()) {
+    switch (type) {
       case 'router':
         return `${process.env.PUBLIC_URL}/icons/router.png`;
       case 'switch':
@@ -99,12 +101,12 @@ const Topologi = () => {
   };
 
   const getColorByState = (state) => {
-    switch (state.toLowerCase()) {
+    switch (state) {
       case 'dysfonctionnel':
         return 'red';
-      case 'problème de réseau':
+      case 'Problème de réseau':
         return 'orange';
-      case 'en bon état':
+      case 'En bon état':
         return 'green';
       default:
         return 'blue';
