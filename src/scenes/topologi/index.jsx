@@ -1,49 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Snackbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Topologi = () => {
   const navigate = useNavigate();
-  const [equipment, setEquipment] = useState(null);
-  const [equipmentList, setEquipmentList] = useState([]);
-  const [lastScannedRFID, setLastScannedRFID] = useState(null);
+  const [scannedEquipments, setScannedEquipments] = useState([]);
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
-    const fetchEquipments = async () => {
-      try {
-        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
-        setEquipmentList(response.data);
-      } catch (error) {
-        console.error('Error fetching equipments:', error);
-      }
-    };
-    fetchEquipments();
-
-    const interval = setInterval(fetchEquipments, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval); // Clean up the interval on component unmount
+    const interval = setInterval(() => {
+      fetchScannedEquipments();
+    }, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchScannedEquipments = async () => {
+    try {
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip/scanned');
+      setScannedEquipments(response.data);
+    } catch (error) {
+      console.error('Error fetching scanned equipments:', error);
+    }
+  };
 
   const handleRFIDScan = async () => {
     try {
       const ndef = new NDEFReader();
       await ndef.scan();
-      ndef.addEventListener('reading', event => {
+      ndef.addEventListener('reading', async event => {
         const rfid = event.serialNumber;
-        const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
-        if (scannedEquipment) {
-          setEquipment(scannedEquipment);
-          setLastScannedRFID(rfid); // Save the last scanned RFID
-          // Update the equipment list after a scan
-          axios.get('https://nodeapp-ectt.onrender.com/equip')
-            .then(response => setEquipmentList(response.data))
-            .catch(error => console.error('Error fetching equipments:', error));
-        } else {
-          console.error('Équipement non trouvé');
+        try {
+          const response = await axios.get(`https://nodeapp-ectt.onrender.com/equip/find/${rfid}`);
+          const { success, equipment, message } = response.data;
+          if (success) {
+            setScannedEquipments([...scannedEquipments, equipment]);
+            setAlertMessage(`Équipement scanné: ${equipment.Nom}`);
+          } else {
+            setAlertMessage(message || 'Équipement non trouvé');
+          }
+        } catch (error) {
+          console.error('Error fetching equipment by RFID:', error);
+          setAlertMessage('Erreur lors de la recherche de l\'équipement');
         }
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
+      setAlertMessage('Erreur lors de la lecture du tag RFID');
     }
   };
 
@@ -53,18 +56,9 @@ const Topologi = () => {
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      {equipment && (
-        <Box mt="20px">
-          <Typography variant="h5">Équipement scanné :</Typography>
-          <Typography>Nom : {equipment.Nom}</Typography>
-          <Typography>Type : {equipment.Type}</Typography>
-          <Typography>Adresse IP : {equipment.AdresseIp}</Typography>
-          <Typography>RFID : {equipment.RFID}</Typography>
-        </Box>
-      )}
       <Box mt="20px">
-        <Typography variant="h5">Tous les équipements :</Typography>
-        {equipmentList.map(equip => (
+        <Typography variant="h5">Équipements scannés :</Typography>
+        {scannedEquipments.map(equip => (
           <Box key={equip._id} mt="10px">
             <Typography>Nom : {equip.Nom}</Typography>
             <Typography>Type : {equip.Type}</Typography>
@@ -74,6 +68,12 @@ const Topologi = () => {
           </Box>
         ))}
       </Box>
+      <Snackbar
+        open={!!alertMessage}
+        autoHideDuration={6000}
+        onClose={() => setAlertMessage('')}
+        message={alertMessage}
+      />
       <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
