@@ -23,14 +23,14 @@ const Topologi = () => {
       }
     };
     fetchEquipments();
-    // Start polling
+
     const intervalId = setInterval(fetchScannedEquipments, 5000); // Poll every 5 seconds
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   const fetchScannedEquipments = async () => {
     try {
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/scannedEquipments');
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/api/scannedEquipments');
       setScannedEquipments(response.data);
       updateGraph(response.data);
     } catch (error) {
@@ -48,25 +48,12 @@ const Topologi = () => {
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
           let newScannedEquipments = [...scannedEquipments];
-          if (selectedEquipmentId) {
-            const selectedEquipment = newScannedEquipments.find(equip => equip._id === selectedEquipmentId);
-            if (selectedEquipment) {
-              selectedEquipment.ConnecteA.push(scannedEquipment._id);
-              try {
-                await axios.put(`https://nodeapp-ectt.onrender.com/equip/${selectedEquipment._id}`, selectedEquipment);
-                setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
-              } catch (updateError) {
-                console.error('Error updating equipment:', updateError);
-              }
-            }
-          }
           if (!newScannedEquipments.find(equip => equip._id === scannedEquipment._id)) {
             newScannedEquipments = [...newScannedEquipments, scannedEquipment];
           }
           setScannedEquipments(newScannedEquipments);
-          setSelectedEquipmentId(null);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
+          await axios.post('https://nodeapp-ectt.onrender.com/api/scannedEquipments', newScannedEquipments);
         } else {
           setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
@@ -74,6 +61,27 @@ const Topologi = () => {
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
+    }
+  };
+
+  const handleCreateConnection = async () => {
+    if (selectedEquipmentId) {
+      const targetEquipmentId = prompt("Entrez l'ID de l'équipement à connecter:");
+      if (targetEquipmentId) {
+        try {
+          await axios.post('https://nodeapp-ectt.onrender.com/connections', {
+            from: selectedEquipmentId,
+            to: targetEquipmentId
+          });
+          setAlertMessage(`Connexion créée entre ${selectedEquipmentId} et ${targetEquipmentId}`);
+          fetchScannedEquipments(); // Refresh the equipment list and graph
+        } catch (error) {
+          console.error('Error creating connection:', error);
+          setAlertMessage('Erreur lors de la création de la connexion');
+        }
+      }
+    } else {
+      setAlertMessage('Sélectionnez d\'abord un équipement');
     }
   };
 
@@ -168,6 +176,9 @@ const Topologi = () => {
       <Typography variant="h3" mb="20px">Inventaire</Typography>
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
+      </Button>
+      <Button variant="contained" color="secondary" onClick={handleCreateConnection} style={{ marginLeft: 10 }}>
+        Créer une connexion
       </Button>
       <Box mt="20px">
         <Typography variant="h5">Équipements scannés :</Typography>
