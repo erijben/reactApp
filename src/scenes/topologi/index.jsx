@@ -9,9 +9,7 @@ const Topologi = () => {
   const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchScannedEquipments();
-    }, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchScannedEquipments, 5000); // Poll every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
