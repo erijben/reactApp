@@ -20,7 +20,7 @@ const Topologi = () => {
 
   const fetchEquipments = async () => {
     try {
-      const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
       setEquipmentList(response.data);
       updateGraph(response.data);
     } catch (error) {
@@ -43,7 +43,7 @@ const Topologi = () => {
             if (selectedEquipment) {
               selectedEquipment.ConnecteA.push(scannedEquipment._id);
               try {
-                await axios.put(`https://nodeapp-0ome.onrender.com/equip/equip/${selectedEquipment._id}`, selectedEquipment);
+                await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, selectedEquipment);
                 setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
               } catch (updateError) {
                 console.error('Error updating equipment:', updateError);
