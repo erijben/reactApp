@@ -48,12 +48,11 @@ const Topologi = () => {
         if (scannedEquipment) {
           if (scannedEquipments.length > 0) {
             const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
+            await axios.post('https://nodeapp-0ome.onrender.com/equip/updateConnection', {
+              currentEquipId: lastScannedEquipment._id,
+              previousEquipId: scannedEquipment._id
+            });
             lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
-            try {
-              await axios.put(`https://nodeapp-0ome.onrender.com/equip/equip/${lastScannedEquipment._id}`, lastScannedEquipment);
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
-            }
           }
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
@@ -78,17 +77,19 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.slice(1).map((equip, index) => ({
-      from: equipments[index]._id,
-      to: equip._id,
-      arrows: 'to'
-    }));
+    const edges = equipments.flatMap((equip, index) =>
+      equip.ConnecteA.map(connectedId => ({
+        from: equip._id,
+        to: connectedId,
+        arrows: 'to'
+      }))
+    );
 
     setGraph({ nodes, edges });
   };
 
   const selectIconBasedOnType = (type) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'router':
         return `${process.env.PUBLIC_URL}/icons/router.png`;
       case 'switch':
@@ -101,12 +102,12 @@ const Topologi = () => {
   };
 
   const getColorByState = (state) => {
-    switch (state) {
+    switch (state.toLowerCase()) {
       case 'dysfonctionnel':
         return 'red';
-      case 'Problème de réseau':
+      case 'problème de réseau':
         return 'orange';
-      case 'En bon état':
+      case 'en bon état':
         return 'green';
       default:
         return 'blue';
