@@ -24,19 +24,17 @@ const Topologi = () => {
     };
     fetchEquipments();
 
-    const intervalId = setInterval(fetchScannedEquipments, 5000); // Poll every 5 seconds
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    const fetchScannedEquipments = async () => {
+      try {
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/api/scannedEquipments');
+        setScannedEquipments(response.data);
+        updateGraph(response.data);
+      } catch (error) {
+        console.error('Error fetching scanned equipments:', error);
+      }
+    };
+    fetchScannedEquipments();
   }, []);
-
-  const fetchScannedEquipments = async () => {
-    try {
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/api/scannedEquipments');
-      setScannedEquipments(response.data);
-      updateGraph(response.data);
-    } catch (error) {
-      console.error('Error fetching scanned equipments:', error);
-    }
-  };
 
   const handleRFIDScan = async () => {
     try {
@@ -53,7 +51,7 @@ const Topologi = () => {
           }
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/api/scannedEquipments', newScannedEquipments);
+          await axios.post('https://nodeapp-ectt.onrender.com/api/scannedEquipments', { equipments: newScannedEquipments });
         } else {
           setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
@@ -69,12 +67,13 @@ const Topologi = () => {
       const targetEquipmentId = prompt("Entrez l'ID de l'équipement à connecter:");
       if (targetEquipmentId) {
         try {
-          await axios.post('https://nodeapp-ectt.onrender.com/connections', {
+          const response = await axios.post('https://nodeapp-ectt.onrender.com/connections', {
             from: selectedEquipmentId,
             to: targetEquipmentId
           });
           setAlertMessage(`Connexion créée entre ${selectedEquipmentId} et ${targetEquipmentId}`);
-          fetchScannedEquipments(); // Refresh the equipment list and graph
+          setScannedEquipments(response.data.equipments);
+          updateGraph(response.data.equipments);
         } catch (error) {
           console.error('Error creating connection:', error);
           setAlertMessage('Erreur lors de la création de la connexion');
@@ -170,6 +169,7 @@ const Topologi = () => {
       setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
     }
   };
+
 
   return (
     <Box m="20px">
