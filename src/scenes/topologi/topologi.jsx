@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Snackbar } from '@mui/material';
+import { Box, Button, Typography, Snackbar, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
@@ -11,19 +11,27 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [alertMessage, setAlertMessage] = useState('');
+  const [connectionDirection, setConnectionDirection] = useState('to');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchEquipments = async () => {
-      try {
-        const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
-        setEquipmentList(response.data);
-      } catch (error) {
-        console.error('Error fetching equipments:', error);
-      }
-    };
     fetchEquipments();
+    const interval = setInterval(() => {
+      fetchEquipments();
+    }, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchEquipments = async () => {
+    try {
+      const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
+      setEquipmentList(response.data);
+      updateGraph(response.data);
+    } catch (error) {
+      console.error('Error fetching equipments:', error);
+    }
+  };
 
   const handleRFIDScan = async () => {
     try {
@@ -55,7 +63,6 @@ const Topologi = () => {
           setScannedEquipments(newScannedEquipments);
           setSelectedEquipmentId(null);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
           setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
@@ -82,7 +89,7 @@ const Topologi = () => {
         edges.push({
           from: equip._id,
           to: connectedId,
-          arrows: 'to'
+          arrows: connectionDirection
         });
       });
     });
@@ -161,7 +168,7 @@ const Topologi = () => {
         Scanner RFID
       </Button>
       <Box mt="20px">
-        <Typography variant="h5">Équipements scannéssssssss :</Typography>
+        <Typography variant="h5">Équipements scannés :</Typography>
         <Graph
           key={Date.now()}
           graph={graph}
@@ -169,6 +176,16 @@ const Topologi = () => {
           events={events}
           style={{ height: "500px" }}
         />
+      </Box>
+      <Box mt="20px">
+        <Typography variant="h6">Direction de la connexion :</Typography>
+        <Select
+          value={connectionDirection}
+          onChange={(e) => setConnectionDirection(e.target.value)}
+        >
+          <MenuItem value="to">Vers</MenuItem>
+          <MenuItem value="from">De</MenuItem>
+        </Select>
       </Box>
       <Snackbar
         open={!!alertMessage}
