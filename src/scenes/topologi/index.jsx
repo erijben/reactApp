@@ -7,6 +7,7 @@ const Topologi = () => {
   const navigate = useNavigate();
   const [equipment, setEquipment] = useState(null);
   const [equipmentList, setEquipmentList] = useState([]);
+  const [lastScannedRFID, setLastScannedRFID] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -18,6 +19,9 @@ const Topologi = () => {
       }
     };
     fetchEquipments();
+
+    const interval = setInterval(fetchEquipments, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval); // Clean up the interval on component unmount
   }, []);
 
   const handleRFIDScan = async () => {
@@ -29,6 +33,11 @@ const Topologi = () => {
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
           setEquipment(scannedEquipment);
+          setLastScannedRFID(rfid); // Save the last scanned RFID
+          // Update the equipment list after a scan
+          axios.get('https://nodeapp-ectt.onrender.com/equip')
+            .then(response => setEquipmentList(response.data))
+            .catch(error => console.error('Error fetching equipments:', error));
         } else {
           console.error('Équipement non trouvé');
         }
@@ -53,6 +62,18 @@ const Topologi = () => {
           <Typography>RFID : {equipment.RFID}</Typography>
         </Box>
       )}
+      <Box mt="20px">
+        <Typography variant="h5">Tous les équipements :</Typography>
+        {equipmentList.map(equip => (
+          <Box key={equip._id} mt="10px">
+            <Typography>Nom : {equip.Nom}</Typography>
+            <Typography>Type : {equip.Type}</Typography>
+            <Typography>Adresse IP : {equip.AdresseIp}</Typography>
+            <Typography>RFID : {equip.RFID}</Typography>
+            <Typography>Etat : {equip.Etat}</Typography>
+          </Box>
+        ))}
+      </Box>
       <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
