@@ -12,19 +12,21 @@ const Topologi = () => {
     try {
       const ndef = new NDEFReader();
       await ndef.scan();
-      ndef.addEventListener('reading', event => {
+      ndef.addEventListener('reading', async event => {
         const rfid = event.serialNumber;
-        axios.get(`https://nodeapp-ectt.onrender.com/find/${rfid}`)
-          .then(response => {
-            if (response.data.success) {
-              setScannedEquipments(prevState => [...prevState, response.data.equipment]);
-            } else {
-              console.error('Équipement non trouvé');
-            }
-          })
-          .catch(error => {
-            console.error('Erreur lors de la recherche de l\'équipement :', error);
-          });
+        console.log('RFID scanned:', rfid); // Debug: Log the scanned RFID
+        try {
+          const response = await axios.get(`https://nodeapp-ectt.onrender.com/find/${rfid}`);
+          console.log('Response from server:', response.data); // Debug: Log the response
+          if (response.data.success) {
+            setScannedEquipments(prevState => [...prevState, response.data.equipment]);
+            console.log('Scanned Equipments:', scannedEquipments); // Debug: Log the scanned equipments
+          } else {
+            console.error('Équipement non trouvé');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la recherche de l\'équipement :', error);
+        }
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
