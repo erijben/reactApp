@@ -7,7 +7,7 @@ const Topologi = () => {
   const navigate = useNavigate();
   const [equipment, setEquipment] = useState(null);
   const [equipmentList, setEquipmentList] = useState([]);
-  const [lastScannedRFID, setLastScannedRFID] = useState(null);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -19,9 +19,6 @@ const Topologi = () => {
       }
     };
     fetchEquipments();
-
-    const interval = setInterval(fetchEquipments, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval); // Clean up the interval on component unmount
   }, []);
 
   const handleRFIDScan = async () => {
@@ -33,11 +30,6 @@ const Topologi = () => {
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
           setEquipment(scannedEquipment);
-          setLastScannedRFID(rfid); // Save the last scanned RFID
-          // Update the equipment list after a scan
-          axios.get('https://nodeapp-ectt.onrender.com/equip')
-            .then(response => setEquipmentList(response.data))
-            .catch(error => console.error('Error fetching equipments:', error));
         } else {
           console.error('Équipement non trouvé');
         }
@@ -47,9 +39,27 @@ const Topologi = () => {
     }
   };
 
+  const handleSelectEquipment = (equip) => {
+    if (selectedEquipment) {
+      // Create connection between selectedEquipment and equip
+      axios.post('https://nodeapp-ectt.onrender.com/connections', {
+        from: selectedEquipment._id,
+        to: equip._id
+      })
+      .then(() => {
+        setSelectedEquipment(null); // Reset selected equipment after connection
+      })
+      .catch(error => {
+        console.error('Error creating connection:', error);
+      });
+    } else {
+      setSelectedEquipment(equip);
+    }
+  };
+
   return (
     <Box m="20px">
-      <Typography variant="h3" mb="20px">Inventaire</Typography>
+      <Typography variant="h3" mb="20px">Topologie</Typography>
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
@@ -63,14 +73,19 @@ const Topologi = () => {
         </Box>
       )}
       <Box mt="20px">
-        <Typography variant="h5">Tous les équipements :</Typography>
+        <Typography variant="h5">Équipements :</Typography>
         {equipmentList.map(equip => (
-          <Box key={equip._id} mt="10px">
+          <Box 
+            key={equip._id} 
+            mt="10px" 
+            onClick={() => handleSelectEquipment(equip)}
+            style={{ cursor: 'pointer', backgroundColor: selectedEquipment && selectedEquipment._id === equip._id ? 'lightgray' : 'white' }}
+          >
             <Typography>Nom : {equip.Nom}</Typography>
             <Typography>Type : {equip.Type}</Typography>
             <Typography>Adresse IP : {equip.AdresseIp}</Typography>
             <Typography>RFID : {equip.RFID}</Typography>
-            <Typography>Etat : {equip.Etat}</Typography>
+            <Typography>Connecté à : {equip.ConnecteA.join(', ')}</Typography>
           </Box>
         ))}
       </Box>
