@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Snackbar, Paper } from '@mui/material';
+import { Box, Button, Typography, Snackbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
@@ -23,7 +23,20 @@ const Topologi = () => {
       }
     };
     fetchEquipments();
+    // Start polling
+    const intervalId = setInterval(fetchScannedEquipments, 5000); // Poll every 5 seconds
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
+
+  const fetchScannedEquipments = async () => {
+    try {
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/scannedEquipments');
+      setScannedEquipments(response.data);
+      updateGraph(response.data);
+    } catch (error) {
+      console.error('Error fetching scanned equipments:', error);
+    }
+  };
 
   const handleRFIDScan = async () => {
     try {
@@ -40,7 +53,7 @@ const Topologi = () => {
             if (selectedEquipment) {
               selectedEquipment.ConnecteA.push(scannedEquipment._id);
               try {
-                await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, selectedEquipment);
+                await axios.put(`https://nodeapp-ectt.onrender.com/equip/${selectedEquipment._id}`, selectedEquipment);
                 setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
               } catch (updateError) {
                 console.error('Error updating equipment:', updateError);
