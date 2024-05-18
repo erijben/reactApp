@@ -7,25 +7,34 @@ import 'vis-network/styles/vis-network.css';
 
 const Topologi = () => {
   const navigate = useNavigate();
+  const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
 
   useEffect(() => {
+    const fetchEquipments = async () => {
+      try {
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
+        setEquipmentList(response.data);
+      } catch (error) {
+        console.error('Error fetching equipments:', error);
+      }
+    };
     fetchEquipments();
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(fetchEquipments, 50000000000); // Fetch every 5 seconds
+    const interval = setInterval(fetchScannedEquipments, 5000); // Fetch every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const fetchEquipments = async () => {
+  const fetchScannedEquipments = async () => {
     try {
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
-      setEquipmentList(response.data);
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/scannedEquipments');
+      setScannedEquipments(response.data);
       updateGraph(response.data);
     } catch (error) {
-      console.error('Error fetching equipments:', error);
+      console.error('Error fetching scanned equipments:', error);
     }
   };
 
@@ -37,18 +46,18 @@ const Topologi = () => {
         const rfid = event.serialNumber;
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
-          const previousEquipment = equipmentList.find(equip => equip.ConnecteA.includes(scannedEquipment._id));
-          if (previousEquipment) {
-            try {
-              await axios.post('https://nodeapp-ectt.onrender.com/equip/updateConnection', {
-                currentEquipId: scannedEquipment._id,
-                previousEquipId: previousEquipment._id
-              });
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
-            }
+          if (scannedEquipments.length > 0) {
+            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
+            await axios.post('https://nodeapp-ectt.onrender.com/equip/updateConnection', {
+              currentEquipId: lastScannedEquipment._id,
+              previousEquipId: scannedEquipment._id
+            });
+            lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
           }
-          fetchEquipments(); // Refresh the equipment list and graph
+          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
+          setScannedEquipments(newScannedEquipments);
+          updateGraph(newScannedEquipments);
+          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
           console.error('Équipement non trouvé');
         }
@@ -68,7 +77,7 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.flatMap(equip =>
+    const edges = equipments.flatMap((equip, index) =>
       equip.ConnecteA.map(connectedId => ({
         from: equip._id,
         to: connectedId,
@@ -133,7 +142,7 @@ const Topologi = () => {
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      {equipmentList.length > 0 && (
+      {scannedEquipments.length > 0 && (
         <Box mt="20px">
           <Typography variant="h5">Équipements scannés :</Typography>
           <Graph
