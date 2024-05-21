@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, MenuItem, Select } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
@@ -13,19 +13,24 @@ const Topologi = () => {
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [targetEquipment, setTargetEquipment] = useState('');
 
   const socket = io('https://nodeapp-ectt.onrender.com'); // Utilisez l'URL de votre backend déployé
 
   useEffect(() => {
     socket.on('newEquipment', (newEquipment) => {
-      setScannedEquipments((prevEquipments) => [...prevEquipments, newEquipment]);
-      updateGraph([...scannedEquipments, newEquipment]);
+      console.log('New equipment received:', newEquipment); // Console log
+      setScannedEquipments((prevEquipments) => {
+        const updatedEquipments = [...prevEquipments, newEquipment];
+        updateGraph(updatedEquipments);
+        return updatedEquipments;
+      });
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [scannedEquipments]);
+  }, []);
 
   const selectIconBasedOnType = (type) => {
     switch (type) {
@@ -65,8 +70,11 @@ const Topologi = () => {
             const response = await axios.get(`https://nodeapp-ectt.onrender.com/equip/find/${serialNumber}`);
             if (response.data.success) {
               const newEquipment = response.data.equipment;
-              setScannedEquipments((prevEquipments) => [...prevEquipments, newEquipment]);
-              updateGraph([...scannedEquipments, newEquipment]);
+              setScannedEquipments((prevEquipments) => {
+                const updatedEquipments = [...prevEquipments, newEquipment];
+                updateGraph(updatedEquipments);
+                return updatedEquipments;
+              });
               socket.emit('newEquipment', newEquipment); // Notify all clients about the new equipment
             } else {
               enqueueSnackbar(`Équipement non trouvé pour RFID: ${serialNumber}`, { variant: 'error' });
@@ -88,17 +96,22 @@ const Topologi = () => {
     setSelectedEquipment(equipment);
   };
 
-  const handleConnectEquipments = async (targetEquipmentId) => {
-    if (selectedEquipment) {
+  const handleConnectEquipments = async () => {
+    if (selectedEquipment && targetEquipment) {
       try {
         const response = await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, {
-          ConnecteA: [...selectedEquipment.ConnecteA, targetEquipmentId]
+          ConnecteA: [...selectedEquipment.ConnecteA, targetEquipment]
         });
 
         if (response.data.success) {
           const updatedEquipment = response.data.data;
-          setScannedEquipments(scannedEquipments.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
-          updateGraph(scannedEquipments.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
+          setScannedEquipments((prevEquipments) => {
+            const updatedEquipments = prevEquipments.map(equip =>
+              equip._id === updatedEquipment._id ? updatedEquipment : equip
+            );
+            updateGraph(updatedEquipments);
+            return updatedEquipments;
+          });
           enqueueSnackbar('Équipements connectés avec succès', { variant: 'success' });
         }
       } catch (error) {
@@ -151,7 +164,7 @@ const Topologi = () => {
     height: "500px",
     interaction: {
       selectConnectedEdges: false,
-      selectNode: handleEquipmentClick
+      selectNode: ({ nodes }) => handleEquipmentClick(nodes[0])
     }
   };
 
@@ -179,10 +192,28 @@ const Topologi = () => {
               <Typography>RFID: {selectedEquipment.RFID}</Typography>
               <Typography>État: {selectedEquipment.Etat}</Typography>
               <Typography>Emplacement: {selectedEquipment.Emplacement}</Typography>
+              <Select
+                value={targetEquipment}
+                onChange={(e) => setTargetEquipment(e.target.value)}
+                displayEmpty
+                fullWidth
+              >
+                <MenuItem value="" disabled>
+                  Sélectionner un équipement pour la connexion
+                </MenuItem>
+                {scannedEquipments
+                  .filter(equip => equip._id !== selectedEquipment._id)
+                  .map(equip => (
+                    <MenuItem key={equip._id} value={equip._id}>
+                      {equip.Nom}
+                    </MenuItem>
+                  ))}
+              </Select>
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => handleConnectEquipments(selectedEquipment._id)}
+                onClick={handleConnectEquipments}
+                disabled={!targetEquipment}
               >
                 Connecter l'équipement
               </Button>
