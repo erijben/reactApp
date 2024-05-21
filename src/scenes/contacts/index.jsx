@@ -282,8 +282,6 @@ const initialValues = {
   RFID: "",
   Emplacement: "",
   Etat: "",
- 
- 
 };
 
 export default Contacts;
