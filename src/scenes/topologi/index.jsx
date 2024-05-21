@@ -1,93 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Snackbar } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
+import io from 'socket.io-client';
+import { useSnackbar } from 'notistack';
 
 const Topologi = () => {
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+
+  const socket = io('https://nodeapp-ectt.onrender.com'); // Utilisez l'URL de votre backend déployé
 
   useEffect(() => {
-    const fetchEquipments = async () => {
-      try {
-        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
-        setEquipmentList(response.data);
-      } catch (error) {
-        console.error('Error fetching equipments:', error);
-      }
-    };
-    fetchEquipments();
-  }, []);
+    // Charger la liste des équipements au chargement de la page
+    fetchEquipmentList();
 
-  const handleRFIDScan = async () => {
-    try {
-      const ndef = new NDEFReader();
-      await ndef.scan();
-      ndef.addEventListener('reading', async event => {
-        const rfid = event.serialNumber;
-        const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
-        if (scannedEquipment) {
-          let newScannedEquipments = [...scannedEquipments];
-          
-          if (selectedEquipmentId) {
-            const selectedEquipment = newScannedEquipments.find(equip => equip._id === selectedEquipmentId);
-            if (selectedEquipment) {
-              selectedEquipment.ConnecteA.push(scannedEquipment._id);
-              try {
-                await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, selectedEquipment);
-                setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
-              } catch (updateError) {
-                console.error('Error updating equipment:', updateError);
-              }
-            }
-          }
-          
-          if (!newScannedEquipments.find(equip => equip._id === scannedEquipment._id)) {
-            newScannedEquipments = [...newScannedEquipments, scannedEquipment];
-          }
-
-          setScannedEquipments(newScannedEquipments);
-          setSelectedEquipmentId(null);
-          updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
-        } else {
-          setAlertMessage('Équipement non trouvé');
-          console.error('Équipement non trouvé');
-        }
-      });
-    } catch (error) {
-      console.error('Erreur lors de la lecture du tag RFID:', error);
-    }
-  };
-
-  const updateGraph = (equipments) => {
-    const nodes = equipments.map(equip => ({
-      id: equip._id,
-      label: equip.Nom,
-      shape: 'image',
-      image: selectIconBasedOnType(equip.Type),
-      title: `Type: ${equip.Type}\nAdresse IP: ${equip.AdresseIp}\nRFID: ${equip.RFID}\nEtat: ${equip.Etat}`,
-      color: getColorByState(equip.Etat)
-    }));
-
-    const edges = [];
-    equipments.forEach(equip => {
-      equip.ConnecteA.forEach(connectedId => {
-        edges.push({
-          from: equip._id,
-          to: connectedId,
-          arrows: 'to'
-        });
-      });
+    socket.on('newEquipment', (newEquipment) => {
+      setEquipmentList((prevEquipments) => [...prevEquipments, newEquipment]);
+      updateGraph([...equipmentList, newEquipment]);
     });
 
-    setGraph({ nodes, edges });
+    return () => {
+      socket.disconnect();
+    };
+  }, [equipmentList]);
+
+  const fetchEquipmentList = async () => {
+    try {
+      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
+      setEquipmentList(response.data);
+      updateGraph(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des équipements:', error);
+    }
   };
 
   const selectIconBasedOnType = (type) => {
@@ -116,6 +67,81 @@ const Topologi = () => {
     }
   };
 
+  const handleRFIDScan = async () => {
+    if ("NDEFReader" in window) {
+      try {
+        const reader = new NDEFReader();
+        await reader.scan();
+        reader.onreading = async (event) => {
+          const serialNumber = event.serialNumber;
+          if (serialNumber) {
+            enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
+            const response = await axios.get(`https://nodeapp-ectt.onrender.com/equip/find/${serialNumber}`);
+            if (response.data.success) {
+              setScannedEquipments((prevEquipments) => [...prevEquipments, response.data.equipment]);
+              updateGraph([...scannedEquipments, response.data.equipment]);
+              socket.emit('newEquipment', response.data.equipment); // Notify all clients about the new equipment
+            } else {
+              enqueueSnackbar(`Équipement non trouvé pour RFID: ${serialNumber}`, { variant: 'error' });
+            }
+          } else {
+            enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
+          }
+        };
+      } catch (error) {
+        enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
+      }
+    } else {
+      enqueueSnackbar("NFC n'est pas supporté sur cet appareil ou navigateur.", { variant: 'warning' });
+    }
+  };
+
+  const handleEquipmentClick = (equipmentId) => {
+    const equipment = equipmentList.find(equip => equip._id === equipmentId);
+    setSelectedEquipment(equipment);
+  };
+
+  const handleConnectEquipments = async (targetEquipmentId) => {
+    if (selectedEquipment) {
+      try {
+        const response = await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, {
+          ConnecteA: [...selectedEquipment.ConnecteA, targetEquipmentId]
+        });
+
+        if (response.data.success) {
+          const updatedEquipment = response.data.data;
+          setEquipmentList(equipmentList.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
+          updateGraph(equipmentList.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
+          enqueueSnackbar('Équipements connectés avec succès', { variant: 'success' });
+        }
+      } catch (error) {
+        enqueueSnackbar(`Erreur lors de la connexion des équipements: ${error.message}`, { variant: 'error' });
+      }
+    }
+  };
+
+  const updateGraph = (equipments) => {
+    const nodes = equipments.map(equip => ({
+      id: equip._id,
+      label: equip.Nom,
+      shape: 'image',
+      image: selectIconBasedOnType(equip.Type),
+      title: `Type: ${equip.Type}\nAdresse IP: ${equip.AdresseIp}\nRFID: ${equip.RFID}\nEtat: ${equip.Etat}`,
+      color: getColorByState(equip.Etat)
+    }));
+
+    const edges = equipments.reduce((acc, equip) => {
+      if (equip.ConnecteA && equip.ConnecteA.length > 0) {
+        equip.ConnecteA.forEach(conn => {
+          acc.push({ from: equip._id, to: conn, arrows: 'to' });
+        });
+      }
+      return acc;
+    }, []);
+
+    setGraph({ nodes, edges });
+  };
+
   const options = {
     layout: {
       hierarchical: false
@@ -137,20 +163,8 @@ const Topologi = () => {
     },
     height: "500px",
     interaction: {
-      selectable: true,
       selectConnectedEdges: false,
-    },
-    manipulation: {
-      enabled: true,
-      initiallyActive: true,
-    },
-  };
-
-  const events = {
-    selectNode: (event) => {
-      const { nodes } = event;
-      setSelectedEquipmentId(nodes[0]);
-      setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
+      selectNode: handleEquipmentClick
     }
   };
 
@@ -160,22 +174,35 @@ const Topologi = () => {
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      <Box mt="20px">
-        <Typography variant="h5">Équipements scannés :</Typography>
-        <Graph
-          key={Date.now()}
-          graph={graph}
-          options={options}
-          events={events}
-          style={{ height: "500px" }}
-        />
-      </Box>
-      <Snackbar
-        open={!!alertMessage}
-        autoHideDuration={6000}
-        onClose={() => setAlertMessage('')}
-        message={alertMessage}
-      />
+      {scannedEquipments.length > 0 && (
+        <Box mt="20px">
+          <Typography variant="h5">Équipements scannés :</Typography>
+          <Graph
+            key={Date.now()}
+            graph={graph}
+            options={options}
+            style={{ height: "500px" }}
+          />
+          {selectedEquipment && (
+            <Box mt="20px">
+              <Typography variant="h6">Équipement sélectionné :</Typography>
+              <Typography>Nom: {selectedEquipment.Nom}</Typography>
+              <Typography>Type: {selectedEquipment.Type}</Typography>
+              <Typography>Adresse IP: {selectedEquipment.AdresseIp}</Typography>
+              <Typography>RFID: {selectedEquipment.RFID}</Typography>
+              <Typography>État: {selectedEquipment.Etat}</Typography>
+              <Typography>Emplacement: {selectedEquipment.Emplacement}</Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleConnectEquipments(selectedEquipment._id)}
+              >
+                Connecter l'équipement
+              </Button>
+            </Box>
+          )}
+        </Box>
+      )}
       <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
