@@ -11,35 +11,21 @@ const Topologi = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [scannedEquipments, setScannedEquipments] = useState([]);
-  const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [selectedEquipment, setSelectedEquipment] = useState(null);
 
   const socket = io('https://nodeapp-ectt.onrender.com'); // Utilisez l'URL de votre backend déployé
 
   useEffect(() => {
-    // Charger la liste des équipements au chargement de la page
-    fetchEquipmentList();
-
     socket.on('newEquipment', (newEquipment) => {
-      setEquipmentList((prevEquipments) => [...prevEquipments, newEquipment]);
-      updateGraph([...equipmentList, newEquipment]);
+      setScannedEquipments((prevEquipments) => [...prevEquipments, newEquipment]);
+      updateGraph([...scannedEquipments, newEquipment]);
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [equipmentList]);
-
-  const fetchEquipmentList = async () => {
-    try {
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
-      setEquipmentList(response.data);
-      updateGraph(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des équipements:', error);
-    }
-  };
+  }, [scannedEquipments]);
 
   const selectIconBasedOnType = (type) => {
     switch (type) {
@@ -78,9 +64,10 @@ const Topologi = () => {
             enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
             const response = await axios.get(`https://nodeapp-ectt.onrender.com/equip/find/${serialNumber}`);
             if (response.data.success) {
-              setScannedEquipments((prevEquipments) => [...prevEquipments, response.data.equipment]);
-              updateGraph([...scannedEquipments, response.data.equipment]);
-              socket.emit('newEquipment', response.data.equipment); // Notify all clients about the new equipment
+              const newEquipment = response.data.equipment;
+              setScannedEquipments((prevEquipments) => [...prevEquipments, newEquipment]);
+              updateGraph([...scannedEquipments, newEquipment]);
+              socket.emit('newEquipment', newEquipment); // Notify all clients about the new equipment
             } else {
               enqueueSnackbar(`Équipement non trouvé pour RFID: ${serialNumber}`, { variant: 'error' });
             }
@@ -97,7 +84,7 @@ const Topologi = () => {
   };
 
   const handleEquipmentClick = (equipmentId) => {
-    const equipment = equipmentList.find(equip => equip._id === equipmentId);
+    const equipment = scannedEquipments.find(equip => equip._id === equipmentId);
     setSelectedEquipment(equipment);
   };
 
@@ -110,8 +97,8 @@ const Topologi = () => {
 
         if (response.data.success) {
           const updatedEquipment = response.data.data;
-          setEquipmentList(equipmentList.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
-          updateGraph(equipmentList.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
+          setScannedEquipments(scannedEquipments.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
+          updateGraph(scannedEquipments.map(equip => equip._id === updatedEquipment._id ? updatedEquipment : equip));
           enqueueSnackbar('Équipements connectés avec succès', { variant: 'success' });
         }
       } catch (error) {
