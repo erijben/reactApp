@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
-import io from 'socket.io-client';
 import { useSnackbar } from 'notistack';
 
 const Topologi = () => {
@@ -15,21 +14,21 @@ const Topologi = () => {
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [targetEquipment, setTargetEquipment] = useState('');
 
-  const socket = io('https://nodeapp-ectt.onrender.com'); // Utilisez l'URL de votre backend déployé
-
   useEffect(() => {
-    socket.on('newEquipment', (newEquipment) => {
-      console.log('New equipment received:', newEquipment); // Console log
-      setScannedEquipments((prevEquipments) => {
-        const updatedEquipments = [...prevEquipments, newEquipment];
-        updateGraph(updatedEquipments);
-        return updatedEquipments;
-      });
-    });
-
-    return () => {
-      socket.disconnect();
+    const fetchScannedEquipments = async () => {
+      try {
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/api/scannedEquipments');
+        setScannedEquipments(response.data);
+        updateGraph(response.data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des équipements scannés:', error);
+      }
     };
+
+    fetchScannedEquipments();
+    const intervalId = setInterval(fetchScannedEquipments, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const selectIconBasedOnType = (type) => {
@@ -75,7 +74,6 @@ const Topologi = () => {
                 updateGraph(updatedEquipments);
                 return updatedEquipments;
               });
-              socket.emit('newEquipment', newEquipment); // Notify all clients about the new equipment
             } else {
               enqueueSnackbar(`Équipement non trouvé pour RFID: ${serialNumber}`, { variant: 'error' });
             }
