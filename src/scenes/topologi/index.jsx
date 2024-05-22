@@ -54,12 +54,12 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-  
-          const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-          if (lastScannedEquipment) {
+
+          if (scannedEquipments.length > 0) {
+            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
             const updatedLastScannedEquipment = {
               ...lastScannedEquipment,
-              ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
+              ConnecteA: [scannedEquipment._id]
             };
             try {
               await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
@@ -67,7 +67,7 @@ const Topologi = () => {
               console.error('Error updating equipment:', updateError);
             }
           }
-  
+
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
@@ -80,6 +80,7 @@ const Topologi = () => {
       console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
+
   const handleRemoveEquipment = async (id) => {
     try {
       const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
