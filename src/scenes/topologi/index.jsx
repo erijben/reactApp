@@ -191,7 +191,7 @@ const Topologi = () => {
           />
         </Box>
       )}
-      <Button variant="contained" color="secondaary" onClick={() => navigate('/dashboard')} mt="20px">
+      <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
       <Snackbar
