@@ -13,11 +13,12 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [lastScannedEquipmentId, setLastScannedEquipmentId] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
         setEquipmentList(response.data);
       } catch (error) {
         console.error('Error fetching equipments:', error);
@@ -25,21 +26,6 @@ const Topologi = () => {
     };
     fetchEquipments();
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(fetchScannedEquipments, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchScannedEquipments = async () => {
-    try {
-      const response = await axios.get('https://nodeapp-0ome.onrender.com/scannedEquipments');
-      setScannedEquipments(response.data);
-      updateGraph(response.data);
-    } catch (error) {
-      console.error('Error fetching scanned equipments:', error);
-    }
-  };
 
   const handleRFIDScan = async () => {
     try {
@@ -55,23 +41,17 @@ const Topologi = () => {
             return;
           }
 
-          if (scannedEquipments.length > 0) {
-            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-            const updatedLastScannedEquipment = {
-              ...lastScannedEquipment,
-              ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
-            };
-            try {
-              await axios.put(`https://nodeapp-0ome.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
-            }
-          }
+          const response = await axios.post(`https://nodeapp-ectt.onrender.com/equip/scan/${rfid}`, { lastScannedEquipmentId });
 
-          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
-          setScannedEquipments(newScannedEquipments);
-          updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
+          if (response.data.success) {
+            const newScannedEquipments = [...scannedEquipments, response.data.equipment];
+            setScannedEquipments(newScannedEquipments);
+            setLastScannedEquipmentId(response.data.equipment._id);
+            updateGraph(newScannedEquipments);
+          } else {
+            setAlertMessage(response.data.message);
+            setAlertOpen(true);
+          }
         } else {
           console.error('Équipement non trouvé');
         }
@@ -86,7 +66,7 @@ const Topologi = () => {
       const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
       setScannedEquipments(newScannedEquipments);
       updateGraph(newScannedEquipments);
-      await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
+      await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'équipement:', error);
     }
