@@ -14,6 +14,37 @@ const Topologi = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+
+  const handleRemoveConnection = async (equipmentId, connectedEquipId) => {
+    try {
+        await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${equipmentId}/removeConnection`, { connectedEquipId });
+        fetchScannedEquipments(); // Mise à jour des équipements scannés après suppression
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la connexion:', error);
+    }
+};
+
+// Ajouter le bouton pour supprimer une connexion dans l'interface utilisateur
+{scannedEquipments.map((equip) => (
+    <Box key={equip._id} display="flex" alignItems="center" mt="10px">
+        <Typography>
+            Nom: {equip.Nom}
+        </Typography>
+        <IconButton onClick={() => handleRemoveEquipment(equip._id)} color="secondary">
+            <DeleteIcon />
+        </IconButton>
+        {equip.ConnecteA.map((connectedEquipId) => (
+            <IconButton
+                key={connectedEquipId}
+                onClick={() => handleRemoveConnection(equip._id, connectedEquipId)}
+                color="secondary"
+            >
+                <DeleteIcon />
+            </IconButton>
+        ))}
+    </Box>
+))}
+
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
@@ -102,11 +133,16 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.slice(1).map((equip, index) => ({
-      from: equipments[index]._id,
-      to: equip._id,
-      arrows: 'to'
-    }));
+    const edges = [];
+    equipments.forEach(equip => {
+      equip.ConnecteA.forEach(connId => {
+        edges.push({
+          from: equip._id,
+          to: connId,
+          arrows: 'to'
+        });
+      });
+    });
 
     setGraph({ nodes, edges });
   };
