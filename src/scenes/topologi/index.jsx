@@ -55,12 +55,13 @@ const Topologi = () => {
             return;
           }
 
-          if (scannedEquipments.length > 0) {
-            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
+          const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
+          if (lastScannedEquipment) {
             const updatedLastScannedEquipment = {
               ...lastScannedEquipment,
               ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
             };
+
             try {
               await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
             } catch (updateError) {
@@ -102,11 +103,16 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.slice(1).map((equip, index) => ({
-      from: equipments[index]._id,
-      to: equip._id,
-      arrows: 'to'
-    }));
+    const edges = [];
+    equipments.forEach(equip => {
+      equip.ConnecteA.forEach(connId => {
+        edges.push({
+          from: equip._id,
+          to: connId,
+          arrows: 'to'
+        });
+      });
+    });
 
     setGraph({ nodes, edges });
   };
