@@ -55,11 +55,13 @@ const Topologi = () => {
             return;
           }
 
+          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
+
           if (scannedEquipments.length > 0) {
             const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
             const updatedLastScannedEquipment = {
               ...lastScannedEquipment,
-              ConnecteA: [scannedEquipment._id]
+              ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
             };
             try {
               await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
@@ -68,7 +70,6 @@ const Topologi = () => {
             }
           }
 
-          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
           await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
