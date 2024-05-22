@@ -102,11 +102,16 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.slice(1).map((equip, index) => ({
-      from: equipments[index]._id,
-      to: equip._id,
-      arrows: 'to'
-    }));
+    const edges = [];
+    equipments.forEach(equip => {
+      equip.ConnecteA.forEach(connId => {
+        edges.push({
+          from: equip._id,
+          to: connId,
+          arrows: 'to'
+        });
+      });
+    });
 
     setGraph({ nodes, edges });
   };
