@@ -80,7 +80,6 @@ const Topologi = () => {
       console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
-  
   const handleRemoveEquipment = async (id) => {
     try {
       const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
