@@ -57,9 +57,9 @@ const Topologi = () => {
 
           if (scannedEquipments.length > 0) {
             const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-            lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
+            const updatedConnecteA = [...lastScannedEquipment.ConnecteA, scannedEquipment._id];
             try {
-              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, { ConnecteA: lastScannedEquipment.ConnecteA });
+              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, { ConnecteA: updatedConnecteA });
             } catch (updateError) {
               console.error('Error updating equipment:', updateError);
             }
