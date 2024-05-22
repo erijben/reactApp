@@ -92,15 +92,6 @@ const Topologi = () => {
     }
   };
 
-  const handleRemoveConnection = async (equipmentId, connectedEquipId) => {
-    try {
-      await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${equipmentId}/removeConnection`, { connectedEquipId });
-      fetchScannedEquipments(); // Mise à jour des équipements scannés après suppression
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la connexion:', error);
-    }
-  };
-
   const updateGraph = (equipments) => {
     const nodes = equipments.map(equip => ({
       id: equip._id,
@@ -190,15 +181,6 @@ const Topologi = () => {
               <IconButton onClick={() => handleRemoveEquipment(equip._id)} color="secondary">
                 <DeleteIcon />
               </IconButton>
-              {equip.ConnecteA.map((connectedEquipId) => (
-                <IconButton
-                  key={connectedEquipId}
-                  onClick={() => handleRemoveConnection(equip._id, connectedEquipId)}
-                  color="secondary"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              ))}
             </Box>
           ))}
           <Graph
