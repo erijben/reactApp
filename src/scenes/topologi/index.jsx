@@ -54,7 +54,7 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-
+  
           if (scannedEquipments.length > 0) {
             const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
             lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
@@ -64,7 +64,7 @@ const Topologi = () => {
               console.error('Error updating equipment:', updateError);
             }
           }
-
+  
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
@@ -77,6 +77,7 @@ const Topologi = () => {
       console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
+  
 
   const handleRemoveEquipment = async (id) => {
     try {
