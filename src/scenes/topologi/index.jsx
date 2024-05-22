@@ -14,6 +14,8 @@ const Topologi = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+
+  
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
