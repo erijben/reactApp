@@ -159,7 +159,6 @@ const Topologi = () => {
           return;
         }
         try {
-          // Mettre à jour les équipements connectés dans la base de données
           await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
             ConnecteA: [data.to]
           });
