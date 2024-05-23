@@ -13,6 +13,7 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -54,30 +55,22 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-  
-          if (scannedEquipments.length > 0) {
-            const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-            lastScannedEquipment.ConnecteA.push(scannedEquipment._id);
-            try {
-              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, { ConnecteA: lastScannedEquipment.ConnecteA });
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
-            }
-          }
-  
+
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
+          setSelectedEquipmentId(scannedEquipment._id);
           updateGraph(newScannedEquipments);
           await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
           console.error('Équipement non trouvé');
+          setAlertMessage('Équipement non trouvé');
+          setAlertOpen(true);
         }
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
-  
 
   const handleRemoveEquipment = async (id) => {
     try {
@@ -100,11 +93,16 @@ const Topologi = () => {
       color: getColorByState(equip.Etat)
     }));
 
-    const edges = equipments.slice(1).map((equip, index) => ({
-      from: equipments[index]._id,
-      to: equip._id,
-      arrows: 'to'
-    }));
+    const edges = [];
+    equipments.forEach(equip => {
+      equip.ConnecteA.forEach(connId => {
+        edges.push({
+          from: equip._id,
+          to: connId,
+          arrows: 'to'
+        });
+      });
+    });
 
     setGraph({ nodes, edges });
   };
@@ -154,7 +152,47 @@ const Topologi = () => {
         to: { enabled: true, scaleFactor: 1 }
       }
     },
-    height: "500px"
+    height: "500px",
+    interaction: {
+      selectable: true,
+      selectConnectedEdges: false,
+    },
+    manipulation: {
+      enabled: true,
+      initiallyActive: true,
+      addEdge: async (data, callback) => {
+        if (data.from === data.to) {
+          setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
+          setAlertOpen(true);
+          return;
+        }
+        try {
+          const fromEquip = scannedEquipments.find(equip => equip._id === data.from);
+          if (fromEquip) {
+            fromEquip.ConnecteA.push(data.to);
+            await axios.put(`https://nodeapp-ectt.onrender.com/equip/${data.from}`, fromEquip);
+            const updatedEquipments = scannedEquipments.map(equip =>
+              equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
+            );
+            setScannedEquipments(updatedEquipments);
+            updateGraph(updatedEquipments);
+            await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
+            callback(data);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour de l\'équipement:', error);
+        }
+      }
+    }
+  };
+
+  const events = {
+    selectNode: (event) => {
+      const { nodes } = event;
+      setSelectedEquipmentId(nodes[0]);
+      setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
+      setAlertOpen(true);
+    }
   };
 
   return (
@@ -180,6 +218,7 @@ const Topologi = () => {
             key={Date.now()}
             graph={graph}
             options={options}
+            events={events}
             style={{ height: "500px" }}
           />
         </Box>
