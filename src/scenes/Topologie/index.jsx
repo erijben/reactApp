@@ -13,7 +13,6 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [selectedNodes, setSelectedNodes] = useState([]);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -177,52 +176,12 @@ const Topologi = () => {
     }
   };
 
-  const handleNodeSelection = (event) => {
-    const { nodes } = event;
-    if (nodes.length === 1) {
-      setSelectedNodes((prevSelectedNodes) => {
-        if (prevSelectedNodes.length === 0) {
-          return [nodes[0]];
-        } else if (prevSelectedNodes.length === 1 && prevSelectedNodes[0] !== nodes[0]) {
-          return [prevSelectedNodes[0], nodes[0]];
-        } else {
-          return [nodes[0]];
-        }
-      });
-    }
-  };
-
-  const handleAddEdge = async () => {
-    if (selectedNodes.length === 2) {
-      const [from, to] = selectedNodes;
-      try {
-        await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${from}`, {
-          ConnecteA: [to]
-        });
-        const updatedEquipments = scannedEquipments.map(equip =>
-          equip._id === from ? { ...equip, ConnecteA: [...equip.ConnecteA, to] } : equip
-        );
-        setScannedEquipments(updatedEquipments);
-        updateGraph(updatedEquipments);
-        await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
-        setSelectedNodes([]);
-      } catch (error) {
-        console.error('Erreur lors de la mise à jour de l\'équipement:', error);
-      }
-    }
-  };
-
   return (
     <Box m="20px">
       <Typography variant="h3" mb="20px">Inventaire</Typography>
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      {selectedNodes.length === 2 && (
-        <Button variant="contained" color="secondary" onClick={handleAddEdge} style={{ marginLeft: '10px' }}>
-          Ajouter une connexion
-        </Button>
-      )}
       {scannedEquipments.length > 0 && (
         <Box mt="20px">
           <Typography variant="h5">Équipements scannés :</Typography>
@@ -240,7 +199,6 @@ const Topologi = () => {
             key={Date.now()}
             graph={graph}
             options={options}
-            events={{ selectNode: handleNodeSelection }}
             style={{ height: "500px" }}
           />
         </Box>
