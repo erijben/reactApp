@@ -13,7 +13,6 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [selectedNode, setSelectedNode] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -160,6 +159,7 @@ const Topologi = () => {
           return;
         }
         try {
+          // Mettre à jour les équipements connectés dans la base de données
           await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
             ConnecteA: [data.to]
           });
