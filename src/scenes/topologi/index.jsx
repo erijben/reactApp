@@ -13,6 +13,7 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -70,15 +71,7 @@ const Topologi = () => {
 
   const handleRemoveEquipment = async (id) => {
     try {
-      // Supprimer les connexions avec l'équipement
-      const updatedEquipments = scannedEquipments.map(equip => {
-        if (equip.ConnecteA.includes(id)) {
-          return { ...equip, ConnecteA: equip.ConnecteA.filter(connId => connId !== id) };
-        }
-        return equip;
-      });
-
-      const newScannedEquipments = updatedEquipments.filter(equip => equip._id !== id);
+      const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
       setScannedEquipments(newScannedEquipments);
       updateGraph(newScannedEquipments);
       await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
@@ -171,16 +164,22 @@ const Topologi = () => {
           return;
         }
         try {
-          await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
-            ConnecteA: [data.to]
-          });
-          const updatedEquipments = scannedEquipments.map(equip =>
-            equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
-          );
-          setScannedEquipments(updatedEquipments);
-          updateGraph(updatedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
-          callback(data);
+          const fromEquipment = scannedEquipments.find(equip => equip._id === data.from);
+          const toEquipment = scannedEquipments.find(equip => equip._id === data.to);
+
+          if (fromEquipment && toEquipment) {
+            fromEquipment.ConnecteA.push(toEquipment._id);
+            await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${fromEquipment._id}`, fromEquipment);
+            const updatedEquipments = scannedEquipments.map(equip =>
+              equip._id === fromEquipment._id ? fromEquipment : equip
+            );
+            setScannedEquipments(updatedEquipments);
+            updateGraph(updatedEquipments);
+            await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
+            callback(data);
+            setAlertMessage(`Connexion créée entre ${fromEquipment.Nom} et ${toEquipment.Nom}`);
+            setAlertOpen(true);
+          }
         } catch (error) {
           console.error('Erreur lors de la mise à jour de l\'équipement:', error);
         }
