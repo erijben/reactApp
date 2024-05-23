@@ -5,7 +5,7 @@ import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
 
-const Topologoi = () => {
+const Topologi = () => {
   const navigate = useNavigate();
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
