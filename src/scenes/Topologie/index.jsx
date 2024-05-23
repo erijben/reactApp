@@ -54,7 +54,7 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-  
+
           const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
           if (lastScannedEquipment) {
             const updatedLastScannedEquipment = {
@@ -67,7 +67,7 @@ const Topologi = () => {
               console.error('Error updating equipment:', updateError);
             }
           }
-  
+
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
