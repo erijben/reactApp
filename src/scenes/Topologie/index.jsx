@@ -117,7 +117,7 @@ const Topologi = () => {
   };
 
   const selectIconBasedOnType = (type) => {
-    switch (type.toLowerCase()) {
+    switch (type) {
       case 'router':
         return `${process.env.PUBLIC_URL}/icons/router.png`;
       case 'switch':
@@ -130,12 +130,12 @@ const Topologi = () => {
   };
 
   const getColorByState = (state) => {
-    switch (state.toLowerCase()) {
+    switch (state) {
       case 'dysfonctionnel':
         return 'red';
-      case 'problème de réseau':
+      case 'Problème de réseau':
         return 'orange';
-      case 'en bon état':
+      case 'En bon état':
         return 'green';
       default:
         return 'blue';
