@@ -59,7 +59,7 @@ const Topologi = () => {
           if (lastScannedEquipment) {
             const updatedLastScannedEquipment = {
               ...lastScannedEquipment,
-              ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
+              ConnecteA: [scannedEquipment._id]
             };
             try {
               await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
