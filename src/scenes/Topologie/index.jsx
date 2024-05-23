@@ -54,19 +54,19 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-  
+
           const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
           if (lastScannedEquipment) {
             try {
               console.log(`Mise à jour de ${lastScannedEquipment.Nom} avec ConnecteA: ${scannedEquipment._id}`);
               await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, {
-                ConnecteA: [scannedEquipment._id]
+                ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
               });
             } catch (updateError) {
               console.error('Error updating equipment:', updateError);
             }
           }
-  
+
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
