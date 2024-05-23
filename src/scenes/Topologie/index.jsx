@@ -13,6 +13,7 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -57,10 +58,13 @@ const Topologi = () => {
 
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
+          setSelectedEquipmentId(scannedEquipment._id);
           updateGraph(newScannedEquipments);
           await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
           console.error('Équipement non trouvé');
+          setAlertMessage('Équipement non trouvé');
+          setAlertOpen(true);
         }
       });
     } catch (error) {
@@ -149,9 +153,13 @@ const Topologi = () => {
       }
     },
     height: "500px",
-    interaction: { selectConnectedEdges: false },
+    interaction: {
+      selectable: true,
+      selectConnectedEdges: false,
+    },
     manipulation: {
       enabled: true,
+      initiallyActive: true,
       addEdge: async (data, callback) => {
         if (data.from === data.to) {
           setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
@@ -159,20 +167,31 @@ const Topologi = () => {
           return;
         }
         try {
-          await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
-            ConnecteA: [data.to]
-          });
-          const updatedEquipments = scannedEquipments.map(equip =>
-            equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
-          );
-          setScannedEquipments(updatedEquipments);
-          updateGraph(updatedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
-          callback(data);
+          const fromEquip = scannedEquipments.find(equip => equip._id === data.from);
+          if (fromEquip) {
+            fromEquip.ConnecteA.push(data.to);
+            await axios.put(`https://nodeapp-ectt.onrender.com/equip/${data.from}`, fromEquip);
+            const updatedEquipments = scannedEquipments.map(equip =>
+              equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
+            );
+            setScannedEquipments(updatedEquipments);
+            updateGraph(updatedEquipments);
+            await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
+            callback(data);
+          }
         } catch (error) {
           console.error('Erreur lors de la mise à jour de l\'équipement:', error);
         }
       }
+    }
+  };
+
+  const events = {
+    selectNode: (event) => {
+      const { nodes } = event;
+      setSelectedEquipmentId(nodes[0]);
+      setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
+      setAlertOpen(true);
     }
   };
 
@@ -199,6 +218,7 @@ const Topologi = () => {
             key={Date.now()}
             graph={graph}
             options={options}
+            events={events}
             style={{ height: "500px" }}
           />
         </Box>
