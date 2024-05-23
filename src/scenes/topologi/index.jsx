@@ -28,7 +28,7 @@ const Topologi = () => {
 
   useEffect(() => {
     fetchScannedEquipments();
-    const interval = setInterval(fetchScannedEquipments, 500000);
+    const interval = setInterval(fetchScannedEquipments, 500000000000);
     return () => clearInterval(interval);
   }, []);
 
@@ -211,7 +211,7 @@ const Topologi = () => {
             </Box>
           ))}
           <Graph
-            key={graph.nodes.length}
+            key={Date.now()}
             graph={graph}
             options={options}
             style={{ height: "500px" }}
