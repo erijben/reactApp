@@ -5,7 +5,7 @@ import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
 
-const Topologi = () => {
+const Topologoi = () => {
   const navigate = useNavigate();
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
@@ -16,7 +16,7 @@ const Topologi = () => {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
+        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
         setEquipmentList(response.data);
       } catch (error) {
         console.error('Error fetching equipments:', error);
@@ -40,7 +40,7 @@ const Topologi = () => {
             if (selectedEquipment) {
               selectedEquipment.ConnecteA.push(scannedEquipment._id);
               try {
-                await axios.put(`https://nodeapp-0ome.onrender.com/equip/${selectedEquipment._id}`, selectedEquipment);
+                await axios.put(`https://nodeapp-ectt.onrender.com/equip/${selectedEquipment._id}`, selectedEquipment);
                 setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
               } catch (updateError) {
                 console.error('Error updating equipment:', updateError);
@@ -55,7 +55,7 @@ const Topologi = () => {
           setScannedEquipments(newScannedEquipments);
           setSelectedEquipmentId(null);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
+          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
           setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
