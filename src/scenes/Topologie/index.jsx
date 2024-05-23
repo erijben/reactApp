@@ -13,6 +13,7 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [selectedNode, setSelectedNode] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -54,19 +55,7 @@ const Topologi = () => {
             setAlertOpen(true);
             return;
           }
-  
-          const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-          if (lastScannedEquipment) {
-            try {
-              console.log(`Mise à jour de ${lastScannedEquipment.Nom} avec ConnecteA: ${scannedEquipment._id}`);
-              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, {
-                ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
-              });
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
-            }
-          }
-  
+
           const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
           updateGraph(newScannedEquipments);
@@ -79,8 +68,6 @@ const Topologi = () => {
       console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
-  
-  
 
   const handleRemoveEquipment = async (id) => {
     try {
@@ -102,7 +89,7 @@ const Topologi = () => {
       title: `Type: ${equip.Type}\nAdresse IP: ${equip.AdresseIp}\nRFID: ${equip.RFID}\nEtat: ${equip.Etat}`,
       color: getColorByState(equip.Etat)
     }));
-  
+
     const edges = [];
     equipments.forEach(equip => {
       equip.ConnecteA.forEach(connId => {
@@ -113,7 +100,7 @@ const Topologi = () => {
         });
       });
     });
-  
+
     setGraph({ nodes, edges });
   };
 
@@ -162,7 +149,32 @@ const Topologi = () => {
         to: { enabled: true, scaleFactor: 1 }
       }
     },
-    height: "500px"
+    height: "500px",
+    interaction: { selectConnectedEdges: false },
+    manipulation: {
+      enabled: true,
+      addEdge: async (data, callback) => {
+        if (data.from === data.to) {
+          setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
+          setAlertOpen(true);
+          return;
+        }
+        try {
+          await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
+            ConnecteA: [data.to]
+          });
+          const updatedEquipments = scannedEquipments.map(equip =>
+            equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
+          );
+          setScannedEquipments(updatedEquipments);
+          updateGraph(updatedEquipments);
+          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
+          callback(data);
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour de l\'équipement:', error);
+        }
+      }
+    }
   };
 
   return (
