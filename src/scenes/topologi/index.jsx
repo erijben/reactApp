@@ -13,7 +13,6 @@ const Topologi = () => {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -27,7 +26,11 @@ const Topologi = () => {
     fetchEquipments();
   }, []);
 
-
+  useEffect(() => {
+    fetchScannedEquipments();
+    const interval = setInterval(fetchScannedEquipments, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchScannedEquipments = async () => {
     try {
@@ -69,9 +72,13 @@ const Topologi = () => {
   const handleRemoveEquipment = async (id) => {
     try {
       const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
-      setScannedEquipments(newScannedEquipments);
-      updateGraph(newScannedEquipments);
-      await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
+      const updatedEquipments = newScannedEquipments.map(equip => ({
+        ...equip,
+        ConnecteA: equip.ConnecteA.filter(connId => connId !== id)
+      }));
+      setScannedEquipments(updatedEquipments);
+      updateGraph(updatedEquipments);
+      await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
       setAlertMessage('Équipement supprimé avec succès');
       setAlertOpen(true);
     } catch (error) {
@@ -154,21 +161,6 @@ const Topologi = () => {
     interaction: { selectConnectedEdges: false },
     manipulation: {
       enabled: true,
-      addNode: async (nodeData, callback) => {
-        const newNode = {
-          id: nodeData.id,
-          label: nodeData.label,
-          shape: 'image',
-          image: selectIconBasedOnType(nodeData.type),
-          title: `Type: ${nodeData.type}\nAdresse IP: ${nodeData.ip}\nRFID: ${nodeData.rfid}\nEtat: ${nodeData.state}`,
-          color: getColorByState(nodeData.state)
-        };
-        setGraph(prevGraph => ({
-          nodes: [...prevGraph.nodes, newNode],
-          edges: [...prevGraph.edges]
-        }));
-        callback(newNode);
-      },
       addEdge: async (data, callback) => {
         if (data.from === data.to) {
           setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
@@ -181,9 +173,9 @@ const Topologi = () => {
 
           if (fromEquipment && toEquipment) {
             fromEquipment.ConnecteA.push(toEquipment._id);
-            await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${fromEquipment._id}`, fromEquipment);
+            await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${fromEquipment._id}`, { ConnecteA: fromEquipment.ConnecteA });
             const updatedEquipments = scannedEquipments.map(equip =>
-              equip._id === fromEquipment._id ? fromEquipment : equip
+              equip._id === fromEquipment._id ? { ...equip, ConnecteA: fromEquipment.ConnecteA } : equip
             );
             setScannedEquipments(updatedEquipments);
             updateGraph(updatedEquipments);
