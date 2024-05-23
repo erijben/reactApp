@@ -11,7 +11,6 @@ const Topologi = () => {
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
@@ -50,31 +49,17 @@ const Topologi = () => {
         const rfid = event.serialNumber;
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
-          let newScannedEquipments = [...scannedEquipments];
-          
-          if (selectedEquipmentId) {
-            const selectedEquipment = newScannedEquipments.find(equip => equip._id === selectedEquipmentId);
-            if (selectedEquipment) {
-              selectedEquipment.ConnecteA.push(scannedEquipment._id);
-              try {
-                await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${selectedEquipment._id}`, selectedEquipment);
-                setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
-              } catch (updateError) {
-                console.error('Error updating equipment:', updateError);
-              }
-            }
-          }
-          
-          if (!newScannedEquipments.find(equip => equip._id === scannedEquipment._id)) {
-            newScannedEquipments = [...newScannedEquipments, scannedEquipment];
+          if (scannedEquipments.some(equip => equip._id === scannedEquipment._id)) {
+            setAlertMessage(`L'équipement ${scannedEquipment.Nom} est déjà scanné.`);
+            setAlertOpen(true);
+            return;
           }
 
+          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
-          setSelectedEquipmentId(null);
           updateGraph(newScannedEquipments);
           await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
-          setAlertMessage('Équipement non trouvé');
           console.error('Équipement non trouvé');
         }
       });
@@ -85,12 +70,24 @@ const Topologi = () => {
 
   const handleRemoveEquipment = async (id) => {
     try {
-      const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
+      // Supprimer les connexions avec l'équipement
+      const updatedEquipments = scannedEquipments.map(equip => {
+        if (equip.ConnecteA.includes(id)) {
+          return { ...equip, ConnecteA: equip.ConnecteA.filter(connId => connId !== id) };
+        }
+        return equip;
+      });
+
+      const newScannedEquipments = updatedEquipments.filter(equip => equip._id !== id);
       setScannedEquipments(newScannedEquipments);
       updateGraph(newScannedEquipments);
       await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
+      setAlertMessage('Équipement supprimé avec succès');
+      setAlertOpen(true);
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'équipement:', error);
+      setAlertMessage('Erreur lors de la suppression de l\'équipement');
+      setAlertOpen(true);
     }
   };
 
@@ -106,10 +103,10 @@ const Topologi = () => {
 
     const edges = [];
     equipments.forEach(equip => {
-      equip.ConnecteA.forEach(connectedId => {
+      equip.ConnecteA.forEach(connId => {
         edges.push({
           from: equip._id,
-          to: connectedId,
+          to: connId,
           arrows: 'to'
         });
       });
@@ -174,7 +171,7 @@ const Topologi = () => {
           return;
         }
         try {
-          await axios.put(`https://nodeapp-ectt.onrender.com/equip/${data.from}`, {
+          await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, {
             ConnecteA: [data.to]
           });
           const updatedEquipments = scannedEquipments.map(equip =>
@@ -191,14 +188,6 @@ const Topologi = () => {
     }
   };
 
-  const events = {
-    selectNode: (event) => {
-      const { nodes } = event;
-      setSelectedEquipmentId(nodes[0]);
-      setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
-    }
-  };
-
   return (
     <Box m="20px">
       <Typography variant="h3" mb="20px">Inventaire</Typography>
@@ -208,11 +197,20 @@ const Topologi = () => {
       {scannedEquipments.length > 0 && (
         <Box mt="20px">
           <Typography variant="h5">Équipements scannés :</Typography>
+          {scannedEquipments.map((equip) => (
+            <Box key={equip._id} display="flex" alignItems="center" mt="10px">
+              <Typography>
+                Nom: {equip.Nom}
+              </Typography>
+              <IconButton onClick={() => handleRemoveEquipment(equip._id)} color="secondary">
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          ))}
           <Graph
             key={Date.now()}
             graph={graph}
             options={options}
-            events={events}
             style={{ height: "500px" }}
           />
         </Box>
