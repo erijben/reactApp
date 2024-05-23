@@ -170,7 +170,7 @@ const Topologi = () => {
           const fromEquip = scannedEquipments.find(equip => equip._id === data.from);
           if (fromEquip) {
             fromEquip.ConnecteA.push(data.to);
-            await axios.put(`https://nodeapp-ectt.onrender.com/equip/${data.from}`, fromEquip);
+            await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, fromEquip);
             const updatedEquipments = scannedEquipments.map(equip =>
               equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
             );
