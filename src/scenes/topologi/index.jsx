@@ -28,6 +28,7 @@ const Topologi = () => {
   }, []);
 
   useEffect(() => {
+    fetchScannedEquipments();
     const interval = setInterval(fetchScannedEquipments, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -157,6 +158,21 @@ const Topologi = () => {
     interaction: { selectConnectedEdges: false },
     manipulation: {
       enabled: true,
+      addNode: async (nodeData, callback) => {
+        const newNode = {
+          id: nodeData.id,
+          label: nodeData.label,
+          shape: 'image',
+          image: selectIconBasedOnType(nodeData.type),
+          title: `Type: ${nodeData.type}\nAdresse IP: ${nodeData.ip}\nRFID: ${nodeData.rfid}\nEtat: ${nodeData.state}`,
+          color: getColorByState(nodeData.state)
+        };
+        setGraph(prevGraph => ({
+          nodes: [...prevGraph.nodes, newNode],
+          edges: [...prevGraph.edges]
+        }));
+        callback(newNode);
+      },
       addEdge: async (data, callback) => {
         if (data.from === data.to) {
           setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
