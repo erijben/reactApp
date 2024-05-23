@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Snackbar, IconButton } from '@mui/material';
+import { Box, Button, Typography, Snackbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Graph from 'react-graph-vis';
 import 'vis-network/styles/vis-network.css';
-import DeleteIcon from '@mui/icons-material/Delete';
 
 const Topologi = () => {
   const navigate = useNavigate();
   const [scannedEquipments, setScannedEquipments] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const response = await axios.get('https://nodeapp-ectt.onrender.com/equip');
+        const response = await axios.get('https://nodeapp-0ome.onrender.com/equip');
         setEquipmentList(response.data);
       } catch (error) {
         console.error('Error fetching equipments:', error);
@@ -26,21 +24,6 @@ const Topologi = () => {
     };
     fetchEquipments();
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(fetchScannedEquipments, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchScannedEquipments = async () => {
-    try {
-      const response = await axios.get('https://nodeapp-ectt.onrender.com/scannedEquipments');
-      setScannedEquipments(response.data);
-      updateGraph(response.data);
-    } catch (error) {
-      console.error('Error fetching scanned equipments:', error);
-    }
-  };
 
   const handleRFIDScan = async () => {
     try {
@@ -50,36 +33,36 @@ const Topologi = () => {
         const rfid = event.serialNumber;
         const scannedEquipment = equipmentList.find(equip => equip.RFID === rfid);
         if (scannedEquipment) {
-          if (scannedEquipments.some(equip => equip._id === scannedEquipment._id)) {
-            setAlertMessage(`L'équipement ${scannedEquipment.Nom} est déjà scanné.`);
-            setAlertOpen(true);
-            return;
+          let newScannedEquipments = [...scannedEquipments];
+          
+          if (selectedEquipmentId) {
+            const selectedEquipment = newScannedEquipments.find(equip => equip._id === selectedEquipmentId);
+            if (selectedEquipment) {
+              selectedEquipment.ConnecteA.push(scannedEquipment._id);
+              try {
+                await axios.put(`https://nodeapp-0ome.onrender.com/equip/${selectedEquipment._id}`, selectedEquipment);
+                setAlertMessage(`Connexion créée entre ${selectedEquipment.Nom} et ${scannedEquipment.Nom}`);
+              } catch (updateError) {
+                console.error('Error updating equipment:', updateError);
+              }
+            }
+          }
+          
+          if (!newScannedEquipments.find(equip => equip._id === scannedEquipment._id)) {
+            newScannedEquipments = [...newScannedEquipments, scannedEquipment];
           }
 
-          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
           setScannedEquipments(newScannedEquipments);
-          setSelectedEquipmentId(scannedEquipment._id);
+          setSelectedEquipmentId(null);
           updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
+          await axios.post('https://nodeapp-0ome.onrender.com/scannedEquipments', newScannedEquipments);
         } else {
-          console.error('Équipement non trouvé');
           setAlertMessage('Équipement non trouvé');
-          setAlertOpen(true);
+          console.error('Équipement non trouvé');
         }
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du tag RFID:', error);
-    }
-  };
-
-  const handleRemoveEquipment = async (id) => {
-    try {
-      const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
-      setScannedEquipments(newScannedEquipments);
-      updateGraph(newScannedEquipments);
-      await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'équipement:', error);
     }
   };
 
@@ -95,10 +78,10 @@ const Topologi = () => {
 
     const edges = [];
     equipments.forEach(equip => {
-      equip.ConnecteA.forEach(connId => {
+      equip.ConnecteA.forEach(connectedId => {
         edges.push({
           from: equip._id,
-          to: connId,
+          to: connectedId,
           arrows: 'to'
         });
       });
@@ -160,30 +143,7 @@ const Topologi = () => {
     manipulation: {
       enabled: true,
       initiallyActive: true,
-      addEdge: async (data, callback) => {
-        if (data.from === data.to) {
-          setAlertMessage('Vous ne pouvez pas connecter un équipement à lui-même.');
-          setAlertOpen(true);
-          return;
-        }
-        try {
-          const fromEquip = scannedEquipments.find(equip => equip._id === data.from);
-          if (fromEquip) {
-            fromEquip.ConnecteA.push(data.to);
-            await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${data.from}`, fromEquip);
-            const updatedEquipments = scannedEquipments.map(equip =>
-              equip._id === data.from ? { ...equip, ConnecteA: [...equip.ConnecteA, data.to] } : equip
-            );
-            setScannedEquipments(updatedEquipments);
-            updateGraph(updatedEquipments);
-            await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', updatedEquipments);
-            callback(data);
-          }
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour de l\'équipement:', error);
-        }
-      }
-    }
+    },
   };
 
   const events = {
@@ -191,7 +151,6 @@ const Topologi = () => {
       const { nodes } = event;
       setSelectedEquipmentId(nodes[0]);
       setAlertMessage(`Équipement sélectionné: ${nodes[0]}`);
-      setAlertOpen(true);
     }
   };
 
@@ -201,37 +160,25 @@ const Topologi = () => {
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
         Scanner RFID
       </Button>
-      {scannedEquipments.length > 0 && (
-        <Box mt="20px">
-          <Typography variant="h5">Équipements scannés :</Typography>
-          {scannedEquipments.map((equip) => (
-            <Box key={equip._id} display="flex" alignItems="center" mt="10px">
-              <Typography>
-                Nom: {equip.Nom}
-              </Typography>
-              <IconButton onClick={() => handleRemoveEquipment(equip._id)} color="secondary">
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
-          <Graph
-            key={Date.now()}
-            graph={graph}
-            options={options}
-            events={events}
-            style={{ height: "500px" }}
-          />
-        </Box>
-      )}
+      <Box mt="20px">
+        <Typography variant="h5">Équipements scannés :</Typography>
+        <Graph
+          key={Date.now()}
+          graph={graph}
+          options={options}
+          events={events}
+          style={{ height: "500px" }}
+        />
+      </Box>
+      <Snackbar
+        open={!!alertMessage}
+        autoHideDuration={6000}
+        onClose={() => setAlertMessage('')}
+        message={alertMessage}
+      />
       <Button variant="contained" color="secondary" onClick={() => navigate('/dashboard')} mt="20px">
         Retour au Dashboard
       </Button>
-      <Snackbar
-        open={alertOpen}
-        autoHideDuration={6000}
-        onClose={() => setAlertOpen(false)}
-        message={alertMessage}
-      />
     </Box>
   );
 };
