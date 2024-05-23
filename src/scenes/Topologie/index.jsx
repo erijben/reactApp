@@ -56,39 +56,26 @@ const Topologi = () => {
           }
 
           const lastScannedEquipment = scannedEquipments[scannedEquipments.length - 1];
-          if (lastScannedEquipment) {
-            const updatedLastScannedEquipment = {
-              ...lastScannedEquipment,
-              ConnecteA: [scannedEquipment._id]
-            };
-            try {
-              await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, updatedLastScannedEquipment);
-            } catch (updateError) {
-              console.error('Error updating equipment:', updateError);
+                if (lastScannedEquipment) {
+                    try {
+                        await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${lastScannedEquipment._id}`, {
+                            ConnecteA: [...lastScannedEquipment.ConnecteA, scannedEquipment._id]
+                        });
+                    } catch (updateError) {
+                        console.error('Error updating equipment:', updateError);
+                    }
+                }
+
+                const newScannedEquipments = [...scannedEquipments, scannedEquipment];
+                setScannedEquipments(newScannedEquipments);
+                updateGraph(newScannedEquipments);
+                await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
+            } else {
+                console.error('Équipement non trouvé');
             }
-          }
-
-          const newScannedEquipments = [...scannedEquipments, scannedEquipment];
-          setScannedEquipments(newScannedEquipments);
-          updateGraph(newScannedEquipments);
-          await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
-        } else {
-          console.error('Équipement non trouvé');
-        }
-      });
+        });
     } catch (error) {
-      console.error('Erreur lors de la lecture du tag RFID:', error);
-    }
-  };
-
-  const handleRemoveEquipment = async (id) => {
-    try {
-      const newScannedEquipments = scannedEquipments.filter(equip => equip._id !== id);
-      setScannedEquipments(newScannedEquipments);
-      updateGraph(newScannedEquipments);
-      await axios.post('https://nodeapp-ectt.onrender.com/scannedEquipments', newScannedEquipments);
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'équipement:', error);
+        console.error('Erreur lors de la lecture du tag RFID:', error);
     }
   };
 
