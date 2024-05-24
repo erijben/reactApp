@@ -26,6 +26,7 @@ const Team = () => {
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+  
   const navigate = useNavigate(); 
   const { enqueueSnackbar } = useSnackbar();
   const handlePingHistoryClick = (row) => {
