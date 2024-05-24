@@ -6,6 +6,8 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from "axios";
+import { useAuth } from '../../authContexte/AuthContext'; // Assurez-vous de spécifier le bon chemin
+
 
 const Intervention = () => {
   const theme = useTheme();
@@ -18,7 +20,7 @@ const Intervention = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scannedEquipmentName = location.state ? location.state.equipmentName : '';
-  const { currentUser } = useAuth();
+  const { currentUser } = useAuth(); // Utilisation de useAuth ici
 
   useEffect(() => {
     const fetchEquipments = async () => {
