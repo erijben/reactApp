@@ -68,8 +68,9 @@ const Intervention = () => {
     date: yup.date().required("Le champ date est requis"),
     description: yup.string().required("Le champ description est requis"),
     parentIntervention: yup.string().nullable(),
-    technicianEmail:yup.string().nullable(),
+   
   });
+
   const handleAddIntervention = async (values) => {
     const equipmentId = equipments.find(equip => equip.Nom === values.equipmentName)?._id;
     if (!equipmentId) {
