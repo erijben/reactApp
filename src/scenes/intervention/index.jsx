@@ -75,13 +75,13 @@ const Intervention = () => {
       return;
     }
   
-    // Utilisation de l'adresse e-mail de l'utilisateur connecté
     const technicianEmail = currentUser?.email;
+    console.log("Current User:", currentUser);
+    console.log("Technician Email:", technicianEmail);
     if (!technicianEmail) {
       setErrorMessage("Adresse e-mail du technicien introuvable.");
       return;
     }
-  
     console.log("Données à soumettre :", {
       ...values,
       equipment: equipmentId,
