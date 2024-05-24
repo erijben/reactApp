@@ -20,7 +20,7 @@ const Intervention = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scannedEquipmentName = location.state ? location.state.equipmentName : '';
-  const { currentUser } = useAuth(); // Utilisation de useAuth ici
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -77,14 +77,15 @@ const Intervention = () => {
     }
     const currentUser = JSON.parse(localStorage.getItem("user"));
     if (!currentUser || !currentUser.email) {
-      setErrorMessage("Adresse e-mail du technicien introuvable.");
-      return;
+        setErrorMessage("Adresse e-mail du technicien introuvable.");
+        return;
     }
-    const dataToSubmit = { 
+     const dataToSubmit = { 
       ...values, 
       equipment: equipmentId,
-      technicianEmail: currentUser.email, // Ajouter l'adresse e-mail de l'utilisateur connecté
+      technicianEmail: currentUser.email, // Utilisation de l'adresse e-mail de l'utilisateur connecté
     };
+
 
     try {
       const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions', dataToSubmit);
