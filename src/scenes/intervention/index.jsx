@@ -18,9 +18,8 @@ const Intervention = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scannedEquipmentName = location.state ? location.state.equipmentName : '';
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+  const { currentUser } = useAuth();
+
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
@@ -77,28 +76,22 @@ const Intervention = () => {
     const dataToSubmit = { 
       ...values, 
       equipment: equipmentId,
-      technicianEmail: currentUser.email, // Ajouter l'adresse e-mail de l'utilisateur connecté
+      technicianEmail: currentUser.email,
     };
-
-    console.log("Soumission du formulaire avec les valeurs :", dataToSubmit); // Ajout du log pour les valeurs du formulaire
 
     try {
       const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions', dataToSubmit);
-      console.log("Réponse du serveur :", response.data);
       if (response.data.success) {
         setSuccessMessage("Intervention ajoutée avec succès");
-      } else {
-        setSuccessMessage(response.data.message || "Ajout réussi");
-        setSuccessMessage(null);
         setTimeout(() => navigate('/liste'), 800);
+      } else {
+        setErrorMessage(response.data.message || "Ajout réussi");
       }
-     
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'intervention :', error);
       setErrorMessage("Erreur côté client : " + error.message);
-      setSuccessMessage(null);
     }
-};
+  };
+
   const navigateToinvList = () => {
     navigate('/liste');
   };
