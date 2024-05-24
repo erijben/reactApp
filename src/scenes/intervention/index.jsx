@@ -68,7 +68,6 @@ const Intervention = () => {
     description: yup.string().required("Le champ description est requis"),
     parentIntervention: yup.string().nullable(),
   });
-
   const handleAddIntervention = async (values) => {
     const equipmentId = equipments.find(equip => equip.Nom === values.equipmentName)?._id;
     if (!equipmentId) {
@@ -83,6 +82,12 @@ const Intervention = () => {
       return;
     }
   
+    console.log("Données à soumettre :", {
+      ...values,
+      equipment: equipmentId,
+      technicianEmail: technicianEmail,
+    });
+  
     const dataToSubmit = {
       ...values,
       equipment: equipmentId,
@@ -90,6 +95,7 @@ const Intervention = () => {
     };
   
     try {
+      console.log("Envoi de la requête d'ajout d'intervention...");
       const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions', dataToSubmit);
       console.log("Réponse du serveur :", response.data);
       if (response.data.success) {
@@ -105,6 +111,7 @@ const Intervention = () => {
       setErrorMessage("Erreur côté client : " + error.message);
       setSuccessMessage(null);
     }
+  
   };
   const navigateToinvList = () => {
     navigate('/liste');
