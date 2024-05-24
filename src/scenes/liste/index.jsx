@@ -8,7 +8,7 @@ import axios from "axios";
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 
-const Listes = () => {
+const Liste = () => {
   const { id } = useParams();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -170,4 +170,4 @@ const Listes = () => {
   );
 };
 
-export default Listes;
+export default Liste;

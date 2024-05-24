@@ -23,8 +23,14 @@ const LoginForm = () =>
       if (response.status === 200) {
         // Stockez le token dans localStorage ou un contexte de gestion d'état global si vous utilisez Redux ou Context API
         localStorage.setItem('token', data.accessToken);
-       
-        navigate('/dashboard');
+        localStorage.setItem('user', JSON.stringify(data.user));
+         // Redirect based on user role
+         const userRole = data.user.role;
+         if (userRole === 'admin' || userRole === 'technicienReseau') {
+           navigate('/dashboard');
+         } else if (userRole === 'adminSystem') {
+           navigate('/user');
+         }
       } else if (response.status === 401) {
         // Code d'état HTTP 401 indique une authentification non réussie (mauvais identifiant ou mot de passe)
         alert('Login failed: Incorrect email or password.');

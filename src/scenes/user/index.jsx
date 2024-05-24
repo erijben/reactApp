@@ -115,7 +115,7 @@ const User = () => {
           display="flex"
           justifyContent="center"
           backgroundColor={
-            role === "admin" ? colors.greenAccent[700] : role === "adminSystem" ? colors.greenAccent[700] : colors.greenAccent[700]
+            role === "admin" ? colors.greenAccent[600] : role === "adminSystem" ? colors.greenAccent[600] : colors.greenAccent[600]
           }
           borderRadius="7px"
         >

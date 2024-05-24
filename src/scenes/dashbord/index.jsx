@@ -25,6 +25,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'; // Importez l'i
 import { Alert, AlertTitle } from '@mui/material'; // Importez les composants Alert de MUI
 import { useSnackbar } from 'notistack';
 import TTLStatsPieChart from "../../components/Pie";
+import { useNavigate } from 'react-router-dom';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -34,6 +35,7 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const captureAndDownloadPDF = async () => {
     try {
         const canvas = await html2canvas(document.querySelector("#dashboard"));
@@ -563,6 +565,22 @@ return (
 >
   Télécharger le rapport PDF
 </button>
+<Button
+    
+    
+    onClick={() => navigate('/inventory')}
+    style={{ 
+      backgroundColor: colors.blueAccent[700], 
+      color: colors.grey[300], 
+      fontSize: '14px', 
+      fontWeight: 'bold', 
+      padding: '10px 20px', 
+      borderRadius: '5px', 
+      cursor: 'pointer' 
+    }}
+  >
+    Inventaire
+  </Button>
 <Box>
     </Box>
       </Box>
@@ -738,7 +756,7 @@ return (
               <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
       Dernières interventions
     </Typography>
-    <NavLink to="/listes">
+    <NavLink to="/liste">
       Voir toutes
     </NavLink>
   </Box>
@@ -747,7 +765,7 @@ return (
       <Typography color={colors.grey[100]}>
         {intervention.type} - {new Date(intervention.date).toLocaleDateString("fr-FR")}
       </Typography>
-      <NavLink to={`/listes/${intervention._id}`}>
+      <NavLink to={`/liste/${intervention._id}`}>
         Voir détails
       </NavLink>
     </Box>

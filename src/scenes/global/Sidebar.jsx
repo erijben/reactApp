@@ -152,29 +152,32 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
  <Item
-              title="Liste des configuration  "
+              title="Liste des configurations  "
               to="/config"
               icon={<SettingsApplicationsOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />   
            
-           <Item
-              title="Topologie "
-              to="/Topologie"
-              icon={< HubIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+        
                <Item
-              title="Topologi "
+              title="Topologie "
               to="/topologi"
               icon={< HubIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             
-            
+           
+
+              <Item
+              title="Liste des inventaires"
+              to="/count"
+              icon={< HubIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
             <Item
               title="Calendar"
               to="/calendar"

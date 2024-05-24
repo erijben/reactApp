@@ -179,7 +179,7 @@ const Team = () => {
           variant="contained"
           size="small"
           sx={{ padding: '5px 8px', minWidth: '15px', fontSize: '0.6rem' }} // Reducing padding and setting minimum width
-        
+          disabled={currentUser?.role === 'technicienReseau'}
           >
         
           Modifier
@@ -236,7 +236,7 @@ const Team = () => {
           variant="contained"
           size="small"
           sx={{ padding: '5px 8px', minWidth: '15px', fontSize: '0.5rem' }}
-       
+          disabled={currentUser?.role === 'technicienReseau'}
         >
           Configurer
         </Button>
@@ -322,6 +322,7 @@ const Team = () => {
           fontWeight: "bold",
           padding: "10px 20px",
         }}  variant="contained"
+        disabled={currentUser?.role === 'technicienReseau'}
         >
           Ajouter équipement
         </Button>

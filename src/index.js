@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
+import { AuthContextProvider } from './authContexte/AuthContext'; // Make sure the path is correct
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -13,7 +14,9 @@ root.render(
         vertical: 'top',
         horizontal: 'center',
       }}>
+        <AuthContextProvider>
         <App />
+        </AuthContextProvider>
       </SnackbarProvider>
     </BrowserRouter>
   </React.StrictMode>
