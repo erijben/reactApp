@@ -73,24 +73,34 @@ const Intervention = () => {
       setErrorMessage("Équipement non trouvé.");
       return;
     }
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    if (!currentUser || !currentUser.email) {
+      setErrorMessage("Adresse e-mail du technicien introuvable.");
+      return;
+    }
     const dataToSubmit = { 
       ...values, 
       equipment: equipmentId,
-      technicianEmail: currentUser.email,
+      technicianEmail: currentUser.email, // Ajouter l'adresse e-mail de l'utilisateur connecté
     };
 
     try {
       const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions', dataToSubmit);
+      console.log("Réponse du serveur :", response.data);
       if (response.data.success) {
         setSuccessMessage("Intervention ajoutée avec succès");
-        setTimeout(() => navigate('/liste'), 800);
       } else {
-        setErrorMessage(response.data.message || "Ajout réussi");
+        setSuccessMessage(response.data.message || "Ajout réussi");
+        setSuccessMessage(null);
+        setTimeout(() => navigate('/liste'), 800);
       }
+     
     } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'intervention :', error);
       setErrorMessage("Erreur côté client : " + error.message);
+      setSuccessMessage(null);
     }
-  };
+};
 
   const navigateToinvList = () => {
     navigate('/liste');
