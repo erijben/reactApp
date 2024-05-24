@@ -76,7 +76,9 @@ const Intervention = () => {
       return;
     }
   
-    if (!currentUser || !currentUser.email) {
+    // Utilisation de l'adresse e-mail de l'utilisateur connecté
+    const technicianEmail = currentUser?.email;
+    if (!technicianEmail) {
       setErrorMessage("Adresse e-mail du technicien introuvable.");
       return;
     }
@@ -84,7 +86,7 @@ const Intervention = () => {
     const dataToSubmit = {
       ...values,
       equipment: equipmentId,
-      technicianEmail: currentUser.email, // Utilisation de l'adresse e-mail de l'utilisateur connecté
+      technicianEmail: technicianEmail,
     };
   
     try {
