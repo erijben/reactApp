@@ -6,8 +6,6 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from "axios";
-import { useAuth } from '../../authContexte/AuthContext'; // Assurez-vous de spécifier le bon chemin
-
 
 const Intervention = () => {
   const theme = useTheme();
@@ -20,7 +18,6 @@ const Intervention = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scannedEquipmentName = location.state ? location.state.equipmentName : '';
-  const { currentUser } = useAuth();
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -59,7 +56,6 @@ const Intervention = () => {
     date: "",
     description: "",
     parentIntervention: "",
-    technicianEmail:"",
   };
 
   const validationSchema = yup.object().shape({
@@ -68,7 +64,6 @@ const Intervention = () => {
     date: yup.date().required("Le champ date est requis"),
     description: yup.string().required("Le champ description est requis"),
     parentIntervention: yup.string().nullable(),
-   
   });
 
   const handleAddIntervention = async (values) => {
@@ -77,28 +72,11 @@ const Intervention = () => {
       setErrorMessage("Équipement non trouvé.");
       return;
     }
-  
-    const technicianEmail = currentUser?.email;
-    console.log("Current User:", currentUser);
-    console.log("Technician Email:", technicianEmail);
-    if (!technicianEmail) {
-      setErrorMessage("Adresse e-mail du technicien introuvable.");
-      return;
-    }
-    console.log("Données à soumettre :", {
-      ...values,
-      equipment: equipmentId,
-      technicianEmail: technicianEmail,
-    });
-  
-    const dataToSubmit = {
-      ...values,
-      equipment: equipmentId,
-      technicianEmail: technicianEmail,
-    };
-  
+    const dataToSubmit = { ...values, equipment: equipmentId };
+
+    console.log("Soumission du formulaire avec les valeurs :", dataToSubmit); // Ajout du log pour les valeurs du formulaire
+
     try {
-      console.log("Envoi de la requête d'ajout d'intervention...");
       const response = await axios.post('https://nodeapp-ectt.onrender.com/api/interventions', dataToSubmit);
       console.log("Réponse du serveur :", response.data);
       if (response.data.success) {
@@ -108,13 +86,12 @@ const Intervention = () => {
         setSuccessMessage(null);
         setTimeout(() => navigate('/liste'), 800);
       }
-  
+     
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'intervention :', error);
       setErrorMessage("Erreur côté client : " + error.message);
       setSuccessMessage(null);
     }
-  
   };
   const navigateToinvList = () => {
     navigate('/liste');

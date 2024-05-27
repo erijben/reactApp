@@ -98,7 +98,7 @@ function App() {
                         <Route path="/topologi" element={<Topologi />} />
                         <Route path="/pie/:equipmentId" element={<Pie />} />
                         <Route path="/ping" element={<Ping />} />
-                        <Route path="/invoices" element={< Invoices/>} />
+                        <Route path="/formconfig/:id" element={< Invoices/>} />
                         <Route path="/ping/:equipmentId" element={<Ping />} />
                         <Route path="/contacts" element={<Contacts />} />
                         <Route path="/liste/:id" element={<InterventionDetails />} />

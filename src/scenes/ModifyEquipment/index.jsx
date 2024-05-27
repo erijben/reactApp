@@ -16,7 +16,7 @@ const checkoutSchema = yup.object().shape({
   RFID: yup.string().required("Champ requis"),
   Emplacement: yup.string().required("Champ requis"),
   Etat: yup.string().required("Champ requis"),
-  ConnecteA: yup.string().required("L'ID de l'équipement connecté est requis")
+ 
 });
 
 // Composant de l'interface de modification
@@ -251,23 +251,9 @@ const ModifyEquipment = () => {
                   helperText={touched.Etat && errors.Etat}
                   sx={{ gridColumn: "span 4" }}
                 />
-                <Autocomplete
-                  fullWidth
-                  options={equipments}
-                  getOptionLabel={(option) => option.Nom}
-                  onChange={(event, value) => setFieldValue('ConnecteA', value ? value._id : '')}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Sélectionner équipement ConnecteA"
-                      variant="filled"
-                      name="ConnecteA"
-                      error={!!touched.ConnecteA && !!errors.ConnecteA}
-                      helperText={touched.ConnecteA && errors.ConnecteA}
-                      onBlur={handleBlur}
-                    />
-                  )}
-                />
+               
+                  
+                
                 <Button type="submit" variant="contained" color="primary">
                   Modifier l'équipement
                 </Button>
