@@ -29,7 +29,7 @@ const Topologi = () => {
 
   useEffect(() => {
     fetchScannedEquipments();
-    const interval = setInterval(fetchScannedEquipments, 50000000);
+    const interval = setInterval(fetchScannedEquipments, 5000); // Mettre à jour toutes les 5 secondes
     return () => clearInterval(interval);
   }, []);
 
@@ -205,9 +205,9 @@ const Topologi = () => {
 
   return (
     <Box m="20px">
-      <Typography variant="h3" mb="20px">Topologie réseau </Typography>
+      <Typography variant="h3" mb="20px">Topologie réseau</Typography>
       <Button variant="contained" color="primary" onClick={handleRFIDScan}>
-        commencer l'installation 
+        commencer l'installation
       </Button>
       {scannedEquipments.length > 0 && (
         <Box mt="20px">
