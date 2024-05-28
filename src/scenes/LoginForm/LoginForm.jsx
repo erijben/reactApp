@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import './LoginForm.css';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm = () =>
-{
+const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -24,13 +23,17 @@ const LoginForm = () =>
         // Stockez le token dans localStorage ou un contexte de gestion d'état global si vous utilisez Redux ou Context API
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('user', JSON.stringify(data.user));
-         // Redirect based on user role
-         const userRole = data.user.role;
-         if (userRole === 'admin' || userRole === 'technicienReseau') {
-           navigate('/dashboard');
-         } else if (userRole === 'adminSystem') {
-           navigate('/user');
-         }
+        
+        // Redirect based on user role
+        const userRole = data.user.role;
+        if (userRole === 'admin' || userRole === 'technicienReseau') {
+          navigate('/dashboard', { replace: true });
+        } else if (userRole === 'adminSystem') {
+          navigate('/user', { replace: true });
+        }
+        
+        // Reload the page to ensure the changes take effect
+        window.location.reload();
       } else if (response.status === 401) {
         // Code d'état HTTP 401 indique une authentification non réussie (mauvais identifiant ou mot de passe)
         alert('Login failed: Incorrect email or password.');
@@ -45,36 +48,30 @@ const LoginForm = () =>
   };
   
   const handleForgotPassword = () => {
-    console.log('Redirection to  forgotPassword');
+    console.log('Redirection to forgotPassword');
     navigate('/password');
   };
     
-    return (
-        <div className='wrapper'> 
-        <form  onSubmit={handleSubmit}>
-            <h1>Login</h1>
-            <div className="input-box">
-            <input type="text" placeholder='email' required  
+  return (
+    <div className='wrapper'> 
+      <form onSubmit={handleSubmit}>
+        <h1>Login</h1>
+        <div className="input-box">
+          <input type="text" placeholder='email' required  
             value={email} onChange={(e) => setEmail(e.target.value)} 
-                       />
-            
-            </div>
-            <div className="input-box">
-            <input type="password" placeholder='Password' required  value={password} onChange={(e) => setPassword(e.target.value)}
-             
-              />
-            
-            </div>
-            <div className="remember-forgot">
-                <label ><input type="checkbox" />Remember me</label>
-                <a href="#" onClick={handleForgotPassword}> Forgot password ? </a>
-            </div>
-            <button type="submit">Login</button>
-            
-        </form>
+          />
         </div>
-        
-
-    )
+        <div className="input-box">
+          <input type="password" placeholder='Password' required  value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <div className="remember-forgot">
+          <label><input type="checkbox" />Remember me</label>
+          <a href="#" onClick={handleForgotPassword}>Forgot password?</a>
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
 }
-export default LoginForm  ;
+
+export default LoginForm;
