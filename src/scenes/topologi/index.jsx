@@ -29,7 +29,7 @@ const Topologi = () => {
 
   useEffect(() => {
     fetchScannedEquipments();
-    const interval = setInterval(fetchScannedEquipments, 5000); // Mettre à jour toutes les 5 secondes
+    const interval = setInterval(fetchScannedEquipments, 500000); // Mettre à jour toutes les 5 secondes
     return () => clearInterval(interval);
   }, []);
 
