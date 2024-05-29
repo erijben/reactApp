@@ -14,7 +14,9 @@ const RfidScanner = ({ readNfcTag }) => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [nfcSupported, setNfcSupported] = useState(false);
+  const [isReading, setIsReading] = useState(false); // Nouvel état pour éviter les lectures répétées
 
+  
   useEffect(() => {
     if ("NDEFReader" in window) {
       setNfcSupported(true);
@@ -30,6 +32,43 @@ const RfidScanner = ({ readNfcTag }) => {
     setOpen(false);
   };
 
+  const readNfcTag = async () => {
+    if (nfcSupported && !isReading) {
+      setIsReading(true); // Empêcher les lectures répétées
+      try {
+        const reader = new NDEFReader();
+        await reader.scan();
+        console.log("En attente de la lecture du tag NFC...");
+
+        reader.onreading = event => {
+          console.log("Tag NFC détecté !");
+          const serialNumber = event.serialNumber;
+          if (serialNumber) {
+            console.log("Numéro de série du tag NFC:", serialNumber);
+            setFieldValue('RFID', serialNumber);
+            setMessage(`RFID scanné avec succès: ${serialNumber}`);
+            setOpen(true);
+            enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
+            if (navigator.vibrate) {
+              navigator.vibrate(200); // Vibration de 200 ms
+            }
+          } else {
+            console.error("Aucune donnée scannée.");
+            enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
+          }
+        };
+      } catch (error) {
+        console.error(`Erreur de lecture du tag NFC: ${error.message}`);
+        setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
+        setOpen(true);
+        enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
+      } finally {
+        setIsReading(false); // Réinitialiser l'état de lecture
+      }
+    }
+  };
+
+  
   return (
     <>
       <IconButton onClick={readNfcTag} color="primary">
