@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; 
-import { Box, Button, TextField, Snackbar, Autocomplete } from "@mui/material";
+import { Box, Button, TextField, Snackbar, IconButton, InputAdornment, Typography } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -7,9 +7,9 @@ import Header from "../../components/Header";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import NfcIcon from '@mui/icons-material/Nfc'; // Importer l'icône NFC
 
-// Define the RfidScanner component outside of the Contacts component
-const RfidScanner = ({ setFieldValue }) => {
+const RfidScanner = ({ readNfcTag }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -30,8 +30,29 @@ const RfidScanner = ({ setFieldValue }) => {
     setOpen(false);
   };
 
-  const readNfcTag = async () => {
-    if (nfcSupported) {
+  return (
+    <>
+      <IconButton onClick={readNfcTag} color="primary">
+        <NfcIcon />
+        <Typography variant="body2" sx={{ ml: 1 }}>
+          Scanner RFID
+        </Typography>
+      </IconButton>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
+    </>
+  );
+};
+
+const Contacts = () => {
+  const { enqueueSnackbar } = useSnackbar();
+  const [equipments, setEquipments] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const isNonMobile = useMediaQuery("(min-width:600px)");
+  const navigate = useNavigate();
+
+  const readNfcTag = async (setFieldValue) => {
+    if ("NDEFReader" in window) {
       try {
         const reader = new NDEFReader();
         await reader.scan();
@@ -43,8 +64,6 @@ const RfidScanner = ({ setFieldValue }) => {
           if (serialNumber) {
             console.log("Numéro de série du tag NFC:", serialNumber);
             setFieldValue('RFID', serialNumber);
-            setMessage(`RFID scanné avec succès: ${serialNumber}`);
-            setOpen(true);
             enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
             if (navigator.vibrate) {
               navigator.vibrate(200); // Vibration de 200 ms
@@ -56,29 +75,10 @@ const RfidScanner = ({ setFieldValue }) => {
         };
       } catch (error) {
         console.error(`Erreur de lecture du tag NFC: ${error.message}`);
-        setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
-        setOpen(true);
         enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
       }
     }
   };
-
-  return (
-    <>
-      <Button onClick={readNfcTag} variant="contained" color="primary">
-        Scanner RFID
-      </Button>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
-    </>
-  );
-};
-
-const Contacts = () => {
-  const [equipments, setEquipments] = useState([]);
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const isNonMobile = useMediaQuery("(min-width:600px)");
-  const navigate = useNavigate();
 
   const handleAddEquipment = async (values) => {
     try {
@@ -89,7 +89,6 @@ const Contacts = () => {
         AdresseIp: values.AdresseIp,
         Emplacement: values.Emplacement,
         Etat: values.Etat,
-     
       };
 
       console.log("Nouvel équipement :", newEquipment);
@@ -102,7 +101,7 @@ const Contacts = () => {
         setSuccessMessage("Équipement ajouté avec succès");
         setErrorMessage(null);
         setTimeout(() => {
-          navigate('/team'); // Remplacez ceci par le chemin réel de votre liste d'équipements
+          navigate('/team');
         }, 800); 
       } else {
         if (response.data.message === "Equipement déjà existant") {
@@ -118,7 +117,7 @@ const Contacts = () => {
       setSuccessMessage(null);
     }
   };
- 
+
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
@@ -207,7 +206,6 @@ const Contacts = () => {
                 helperText={touched.AdresseIp && errors.AdresseIp}
                 sx={{ gridColumn: "span 4" }}
               />
-              <RfidScanner setFieldValue={setFieldValue} />
               <TextField
                 fullWidth
                 variant="filled"
@@ -217,6 +215,18 @@ const Contacts = () => {
                 name="RFID"
                 error={!!errors.RFID}
                 helperText={errors.RFID}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={readNfcTag} color="primary">
+                        <NfcIcon />
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          Scanner RFID
+                        </Typography>
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{ gridColumn: "span 4" }}
               />
               <TextField
@@ -245,7 +255,6 @@ const Contacts = () => {
                 helperText={touched.Etat && errors.Etat}
                 sx={{ gridColumn: "span 4" }}
               />
-             
             
               
             </Box>

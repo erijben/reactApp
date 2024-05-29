@@ -4,13 +4,8 @@ import { tokens } from "../../theme";
 import { Autocomplete,Checkbox } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import TrafficIcon from "@mui/icons-material/Traffic";
 import Header from "../../components/Header";
 import LineChart from "../../components/LineChart";
-import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/barChart";
 import StatBox from "../../components/StatBox";
 import { useEffect, useState } from "react";
@@ -21,8 +16,6 @@ import WifiTetheringIcon from '@mui/icons-material/WifiTethering';
 import { NavLink } from 'react-router-dom';
 import {TextField}  from '@mui/material';
 import { Menu, MenuItem, FormGroup, FormControlLabel } from "@mui/material";
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'; // Importez l'icône appropriée
-import { Alert, AlertTitle } from '@mui/material'; // Importez les composants Alert de MUI
 import { useSnackbar } from 'notistack';
 import TTLStatsPieChart from "../../components/Pie";
 import { useNavigate } from 'react-router-dom';
