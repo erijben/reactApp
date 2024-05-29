@@ -9,14 +9,13 @@ import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import NfcIcon from '@mui/icons-material/Nfc'; // Importer l'icône NFC
 
-const RfidScanner = ({ readNfcTag }) => {
+const RfidScanner = ({ setFieldValue }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [nfcSupported, setNfcSupported] = useState(false);
   const [isReading, setIsReading] = useState(false); // Nouvel état pour éviter les lectures répétées
 
-  
   useEffect(() => {
     if ("NDEFReader" in window) {
       setNfcSupported(true);
@@ -68,7 +67,6 @@ const RfidScanner = ({ readNfcTag }) => {
     }
   };
 
-  
   return (
     <>
       <IconButton onClick={readNfcTag} color="primary">
@@ -168,7 +166,6 @@ const Contacts = () => {
     };
     fetchEquipments();
   }, []);
-
   return (
     <Box m="20px">
       <Header title="Ajouter un équipement" subtitle="Voir la liste des équipements" />
