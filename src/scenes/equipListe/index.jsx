@@ -280,8 +280,8 @@ const Team = () => {
       cellClassName: "name-column--cell",
     },
     {
-      field: "Emplacement",
-      headerName: "Emplacement",
+      field: "Département",
+      headerName: "Département",
       type: "String",
       headerAlign: "center",
       align: "center",
