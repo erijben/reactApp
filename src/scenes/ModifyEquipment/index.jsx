@@ -14,7 +14,7 @@ const checkoutSchema = yup.object().shape({
   Type: yup.string().required("Champ requis"),
   AdresseIp: yup.string().required("Champ requis"),
   RFID: yup.string().required("Champ requis"),
-  Emplacement: yup.string().required("Champ requis"),
+  Département: yup.string().required("Champ requis"),
   Etat: yup.string().required("Champ requis"),
  
 });
@@ -229,13 +229,13 @@ const ModifyEquipment = () => {
                   fullWidth
                   variant="filled"
                   type="text"
-                  label="Emplacement"
+                  label="Département"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.Emplacement}
-                  name="Emplacement"
-                  error={!!touched.Emplacement && !!errors.Emplacement}
-                  helperText={touched.Emplacement && errors.Emplacement}
+                  value={values.Département}
+                  name="Département"
+                  error={!!touched.Département && !!errors.Département}
+                  helperText={touched.Département && errors.Département}
                   sx={{ gridColumn: "span 4" }}
                 />
                 <TextField
