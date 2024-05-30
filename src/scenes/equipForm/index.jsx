@@ -315,7 +315,7 @@ const checkoutSchema = yup.object().shape({
   Type: yup.string().required("required"),
   AdresseIp: yup.string().required("required"),
   RFID: yup.string().required("required"),
-  Emplacement: yup.string().required("required"),
+  Département: yup.string().required("required"),
   Etat: yup.string().required("required"),
  
  

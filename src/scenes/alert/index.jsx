@@ -212,7 +212,7 @@ const Alert = () => {
       renderCell: (params) => {
         const averageTTL = getAverage(params.row.TTL.filter(value => !isNaN(value)));
         return (
-          <div style={{ backgroundColor: getCellColor(averageTTL, 'TTL') }}>
+          <div style={{ backgroundColor: selectedAttributes.includes('TTL') && (isNaN(averageTTL) || averageTTL === 0) ? 'red' : getCellColor(averageTTL, 'TTL') }}>
             {isNaN(averageTTL) ? "NaN" : averageTTL.toFixed(2)}
           </div>
         );
@@ -228,13 +228,14 @@ const Alert = () => {
       align: 'left',
       headerAlign: 'left',
       renderCell: (params) => {
-        const averageLatency = getAverage(params.row.latency); // Calculer la moyenne pour latency
+        const averageLatency = getAverage(params.row.latency);
         return (
-          <div style={{ backgroundColor: getCellColor(averageLatency, 'latency') }}>
-            {averageLatency.toFixed(2)} 
+          <div style={{ backgroundColor: selectedAttributes.includes('latency') && (isNaN(averageLatency) || averageLatency === 0) ? 'red' : getCellColor(averageLatency, 'latency') }}>
+            {isNaN(averageLatency) ? "NaN" : averageLatency.toFixed(2)}
           </div>
         );
       },
+
       cellClassName: "name-column--cell",
       flex: 2,
     },
