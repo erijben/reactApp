@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Snackbar, Autocomplete } from "@mui/material"; 
+import { Box, TextField, Button, Snackbar, InputAdornment, IconButton, Typography } from "@mui/material"; 
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useParams } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import NfcIcon from '@mui/icons-material/Nfc'; // Importer l'icône NFC
 
 // Schéma de validation avec Yup
 const checkoutSchema = yup.object().shape({
@@ -16,8 +17,79 @@ const checkoutSchema = yup.object().shape({
   RFID: yup.string().required("Champ requis"),
   Département: yup.string().required("Champ requis"),
   Etat: yup.string().required("Champ requis"),
- 
 });
+
+// Composant pour scanner le RFID
+const RfidScanner = ({ setFieldValue }) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [nfcSupported, setNfcSupported] = useState(false);
+  const [isReading, setIsReading] = useState(false); // Nouvel état pour éviter les lectures répétées
+
+  useEffect(() => {
+    if ("NDEFReader" in window) {
+      setNfcSupported(true);
+      console.log("NFC supporté");
+    } else {
+      setNfcSupported(false);
+      enqueueSnackbar("NFC n'est pas supporté sur cet appareil ou navigateur.", { variant: 'warning' });
+      console.log("NFC non supporté");
+    }
+  }, [enqueueSnackbar]);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const readNfcTag = async () => {
+    if (nfcSupported && !isReading) {
+      setIsReading(true); // Empêcher les lectures répétées
+      try {
+        const reader = new NDEFReader();
+        await reader.scan();
+        console.log("En attente de la lecture du tag NFC...");
+
+        reader.onreading = event => {
+          console.log("Tag NFC détecté !");
+          const serialNumber = event.serialNumber;
+          if (serialNumber) {
+            console.log("Numéro de série du tag NFC:", serialNumber);
+            setFieldValue('RFID', serialNumber);
+            setMessage(`RFID scanné avec succès: ${serialNumber}`);
+            setOpen(true);
+            enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
+            if (navigator.vibrate) {
+              navigator.vibrate(200); // Vibration de 200 ms
+            }
+          } else {
+            console.error("Aucune donnée scannée.");
+            enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
+          }
+        };
+      } catch (error) {
+        console.error(`Erreur de lecture du tag NFC: ${error.message}`);
+        setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
+        setOpen(true);
+        enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
+      } finally {
+        setIsReading(false); // Réinitialiser l'état de lecture
+      }
+    }
+  };
+
+  return (
+    <>
+      <IconButton onClick={readNfcTag} color="primary">
+        <NfcIcon />
+        <Typography variant="body2" sx={{ ml: 1 }}>
+          Scanner RFID
+        </Typography>
+      </IconButton>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
+    </>
+  );
+};
 
 // Composant de l'interface de modification
 const ModifyEquipment = () => {
@@ -58,7 +130,7 @@ const ModifyEquipment = () => {
 
   const handleModifyEquipment = async (values) => {
     try {
-      const response = await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/equip/${id}`, values);
+      const response = await axios.put(`https://nodeapp-ectt.onrender.com/equip/equip/${id}`, values);
   
       if (response.data.success) {
         setSuccessMessage("Équipement modifié avec succès");
@@ -75,69 +147,6 @@ const ModifyEquipment = () => {
       setErrorMessage("Erreur lors de la modification de l'équipement. Veuillez réessayer plus tard.");
       setSuccessMessage(null);
     }
-  };
-
-  const RfidScanner = ({ setFieldValue }) => {
-    const [open, setOpen] = useState(false);
-    const [message, setMessage] = useState("");
-    const [nfcSupported, setNfcSupported] = useState(false);
-  
-    useEffect(() => {
-      if ("NDEFReader" in window) {
-        setNfcSupported(true);
-        console.log("NFC supporté");
-      } else {
-        setNfcSupported(false);
-        enqueueSnackbar("NFC n'est pas supporté sur cet appareil ou navigateur.", { variant: 'warning' });
-        console.log("NFC non supporté");
-      }
-    }, [enqueueSnackbar]);
-  
-    const handleClose = () => {
-      setOpen(false);
-    };
-  
-    const readNfcTag = async () => {
-      if (nfcSupported) {
-        try {
-          const reader = new NDEFReader();
-          await reader.scan();
-          console.log("En attente de la lecture du tag NFC...");
-  
-          reader.onreading = event => {
-            console.log("Tag NFC détecté !");
-            const serialNumber = event.serialNumber;
-            if (serialNumber) {
-              console.log("Numéro de série du tag NFC:", serialNumber);
-              setFieldValue('RFID', serialNumber);
-              setMessage(`RFID scanné avec succès: ${serialNumber}`);
-              setOpen(true);
-              enqueueSnackbar(`RFID scanné avec succès: ${serialNumber}`, { variant: 'success' });
-              if (navigator.vibrate) {
-                navigator.vibrate(200); // Vibration de 200 ms
-              }
-            } else {
-              console.error("Aucune donnée scannée.");
-              enqueueSnackbar("Aucune donnée scannée.", { variant: 'warning' });
-            }
-          };
-        } catch (error) {
-          console.error(`Erreur de lecture du tag NFC: ${error.message}`);
-          setMessage(`Erreur de lecture du tag NFC: ${error.message}`);
-          setOpen(true);
-          enqueueSnackbar(`Erreur de lecture du tag NFC: ${error.message}`, { variant: 'error' });
-        }
-      }
-    };
-  
-    return (
-      <>
-        <Button onClick={readNfcTag} variant="contained" color="primary">
-          Scanner RFID
-        </Button>
-        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} message={message} />
-      </>
-    );
   };
 
   return (
@@ -213,16 +222,24 @@ const ModifyEquipment = () => {
                   helperText={touched.AdresseIp && errors.AdresseIp}
                   sx={{ gridColumn: "span 4" }}
                 />
-                <RfidScanner setFieldValue={setFieldValue} />
                 <TextField
                   fullWidth
                   variant="filled"
                   type="text"
                   label="RFID"
-                  value={values.RFID}
                   name="RFID"
+                  value={values.RFID}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   error={!!errors.RFID}
                   helperText={errors.RFID}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <RfidScanner setFieldValue={setFieldValue} />
+                      </InputAdornment>
+                    ),
+                  }}
                   sx={{ gridColumn: "span 4" }}
                 />
                 <TextField

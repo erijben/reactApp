@@ -85,9 +85,21 @@ const Alert = () => {
  
 
 
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
 
   const getAverage = (numbers) => {
-    return numbers.reduce((acc, cur) => acc + cur, 0) / numbers.length;
+    const validNumbers = numbers.filter(value => !isNaN(value));
+    if (validNumbers.length === 0) return NaN;
+    return validNumbers.reduce((acc, cur) => acc + cur, 0) / validNumbers.length;
   };
   
   const getCellColor = (value, attribute) => {
@@ -198,15 +210,14 @@ const Alert = () => {
       align: 'left',
       headerAlign: 'left',
       renderCell: (params) => {
-        const averageTTL = getAverage(params.row.TTL);
+        const averageTTL = getAverage(params.row.TTL.filter(value => !isNaN(value)));
         return (
           <div style={{ backgroundColor: getCellColor(averageTTL, 'TTL') }}>
-            {averageTTL.toFixed(2)}
+            {isNaN(averageTTL) ? "NaN" : averageTTL.toFixed(2)}
           </div>
         );
       },
       cellClassName: "name-column--cell",
-     
       flex: 2,
     },
  
@@ -237,6 +248,7 @@ const Alert = () => {
       flex: 1.7,
       cellClassName: "name-column--cell",
     },
+
     {
       field: "packetsReceived",
       headerName: "Packets Received",
@@ -265,39 +277,42 @@ const Alert = () => {
       ),
       flex: 1.7, // Adjust the width as needed
     },
+
     {
       field: "minimumTime",
       headerName: "Minimum Time",
       type: 'number',
       align: 'left',
       renderCell: (params) => (
-        <div style={{ backgroundColor: getCellColor(params.value, 'minimumTime') }}>
-          {params.value}
+        <div style={{ backgroundColor: selectedAttributes.includes('minimumTime') && params.value === 0 ? 'red' : getCellColor(params.value, 'minimumTime') }}>
+          {params.value === 0 ? "-" : params.value}
         </div>
       ),
       headerAlign: 'left',
       flex: 1.7, 
     },
+
     {
       field: "maximumTime",
       headerName: "Maximum Time",
       type: 'number',
       renderCell: (params) => (
-        <div style={{ backgroundColor: getCellColor(params.value, 'maximumTime') }}>
-          {params.value}
+        <div style={{ backgroundColor: selectedAttributes.includes('maximumTime') && params.value === 0 ? 'red' : getCellColor(params.value, 'maximumTime') }}>
+          {params.value === 0 ? "-" : params.value}
         </div>
       ),
       align: 'left',
       headerAlign: 'left',
       flex: 1.7, 
     },
+
     {
       field: "averageTime",
       headerName: "Average Time",
       type: 'number',
       renderCell: (params) => (
-        <div style={{ backgroundColor: getCellColor(params.value, 'averageTime') }}>
-          {params.value}
+        <div style={{ backgroundColor: selectedAttributes.includes('averageTime') && params.value === 0 ? 'red' : getCellColor(params.value, 'averageTime') }}>
+          {params.value === 0 ? "-" : params.value}
         </div>
       ),
       align: 'left',
@@ -313,9 +328,9 @@ const Alert = () => {
       headerName: "Timestamp",
       align: 'left',
       headerAlign: 'left',
+      renderCell: (params) => formatDate(params.value),
       flex: 2.2,
     },
-    
     
   ];
 

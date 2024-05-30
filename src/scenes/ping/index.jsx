@@ -38,6 +38,19 @@ const Ping = () => {
   }, [equipmentId]);
   // Utiliser l'ID de l'équipement comme dépendance du useEffect
 
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
+
   const columns = [
     {
       field: "status",
@@ -108,27 +121,37 @@ const Ping = () => {
       headerName: "Minimum Time",
       type: 'number',
       width: 100, // Adjust the width as needed
+      renderCell: (params) => (
+        params.value === 0 ? "-" : params.value
+      )
     },
     {
       field: "maximumTime",
       headerName: "Maximum Time",
       type: 'number',
       width: 100, // Adjust the width as needed
+      renderCell: (params) => (
+        params.value === 0 ? "-" : params.value
+      )
     },
     {
       field: "averageTime",
       headerName: "Average Time",
       type: 'number',
-      width: 100, // Adjust the width as needed
+      width: 100,
+      renderCell: (params) => (
+        params.value === 0 ? "-" : params.value
+      )
     },
     
 
 
-    {
+   {
       field: "timestamp",
       headerName: "Timestamp",
       flex: 1,
       width: 30,
+      renderCell: (params) => formatDate(params.value),
     },
    
    
